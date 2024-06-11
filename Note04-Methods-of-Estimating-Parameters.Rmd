@@ -2,9 +2,6 @@
 title: "4. Methods of Estimating Parameters"
 date: "6/10/2024"
 output:
-  pdf_document: 
-    toc: yes
-    number_sections: yes
   html_document:
     toc: yes
     toc_float: yes
@@ -14,6 +11,9 @@ output:
     code_download: yes
     smooth_scroll: yes
     theme: lumen
+  pdf_document: 
+    toc: yes
+    number_sections: yes
 editor_options:
   chunk_output_type: inline
   pdf_document:
@@ -991,9 +991,9 @@ The gradient functions given respectively by
 $$
 \left\{
 \begin{array}{lcl}
-G_a & = & x^2 \\
-G_b & = & x \\
-G_c & = & 1
+G_a & = & \sum_{i=1}^{11}2(ax_i^2 + bx_i + c - y_i)x_i^2 \\
+G_b & = & \sum_{i=1}^{11}2(ax_i^2 + bx_i + c - y_i)x_i \\
+G_c & = & \sum_{i=1}^{11}2(ax_i^2 + bx_i + c - y_i)
 \end{array}
 \right.
 $$
