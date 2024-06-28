@@ -2,6 +2,9 @@
 title: "4. Methods of Estimating Parameters"
 date: "6/10/2024"
 output:
+  pdf_document: 
+    toc: yes
+    number_sections: yes
   html_document:
     toc: yes
     toc_float: yes
@@ -11,9 +14,6 @@ output:
     code_download: yes
     smooth_scroll: yes
     theme: lumen
-  pdf_document: 
-    toc: yes
-    number_sections: yes
 editor_options:
   chunk_output_type: inline
   pdf_document:
@@ -1073,7 +1073,7 @@ n = length(x)
 negLogLik = function(A){
   a = A[1]
   b = A[2]
-  n*(log(a) + log(b) + (b-1)*sum(log(x)) - a*sum(x^b))
+  n*log(a) + n*log(b) + (b-1)*sum(log(x)) - a*sum(x^b)
 }
 ## gradient function
 grFun = function(A){
@@ -1084,18 +1084,25 @@ grFun = function(A){
   c(ga,gb)
 }
 ## calling R function optim()
-optim(par = c(1,1), fn = negLogLik, gr = grFun, method = "BFGS", 
-      control = list(maxit = 20000,fnscale = -1), hessian = TRUE)
+optim(par = c(1,1), 
+      fn = negLogLik, 
+      gr = grFun, 
+      method = "BFGS", 
+      control = list(maxit = 20000,fnscale = -1), 
+      hessian = TRUE)
+# note: fnscale = negative-value will convert the minimization to 
+#       the maximization problem! The default optim() minimize the objective
+#       function with default argument fnscale to be positive in control().
 ```
 
-According to the discussions of local minima and local maxima at the end of section 4.2, the determinant of the Hessian matrix is positive and the top-left corner of the Hessian matrix is less than zero, that is $(\alpha, \beta) = (1.77404763, 0.03477354)$ maximizes the log-likelihood function locally. This means the fitted Weibull distribution has the following density
+According to the discussions of local minima and local maxima at the end of section 4.2, the determinant of the Hessian matrix is positive and the top-left corner of the Hessian matrix is less than zero, that is $(\alpha, \beta) = (1.4929771, 0.3664338)$ maximizes the log-likelihood function locally. This means the fitted Weibull distribution has the following density
 
 $$
-f(x) = 1.774\times 0.035\times x^{0.035 -1} e^{-1.774 x^{0.035}}.
+f(x) = 1.4929771\times 0.3664338\times x^{0.3664338 -1} e^{-1.4929771 x^{0.3664338}}.
 $$
 
 
-**Caution**: By default `optim()` performs minimization, we need to set the control statement in the list to a negative value when maximizing the log-likelihood. This is another important point that we need to pay attention to in addition to the convergence code!
+**Caution**: By default `optim()` performs minimization, we need to set the control statement in the list to a negative value, for example `fnscale = -1`,  when maximizing the log-likelihood. This is another important point that we need to pay attention to in addition to the convergence code!
 
 
 # Concluding Remarks
