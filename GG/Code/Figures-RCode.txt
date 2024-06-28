@@ -1,0 +1,654 @@
+###############################################
+####          Shannon Entropy Function
+###############################################
+aa=0.5
+cc=seq(-aa+0.01, 40*aa, length=500)
+ff=function(cc) ((aa+cc-1)/aa)*trigamma((aa+cc)/aa)
+ff1=function(cc) -(1/aa)*(trigamma((aa+cc)/aa)*psigamma((aa+cc)/aa, deriv=2))
+yy0=ff(cc)
+yy1=ff1(cc)
+yy=1-ff(cc)
+par(mfrow=c(1,3))
+c0=cc[min(which(aa+cc>1))]
+plot(cc,yy0, type="l", ylim=c(-1.5, 1.5), col=2)
+title("trigamma*(a+c-1)/a")
+abline(h=0, v=c0)
+plot(cc,yy, type="l", ylim=c(-1.5, 1.5), col=2)
+title("1-trigamma*(a+c-1)/a")
+c0=cc[min(which(aa+cc>1))]
+abline(h=0, v=c0)
+plot(cc,yy1, type="l", col=2, ylim=c(-0.00005, 0.05))
+abline(h=0)
+title("tetragamma")
+##cbind(aa, cc, pp=aa+cc, yy)
+##############################################
+yy
+yy1
+##############################################    
+
+#############################################################
+###                  Figure 3
+############  Plots of digamma and logarithmic functions
+par(mfrow=c(1,2), mar=c(4,4,2,2))
+x=seq(0.5, 10, length=100000)
+plot(x,digamma(x), type="l", main="Digamma and Natural Logarithmic Functions",
+     xlab="x", ylab="digamma(x)",  col=1, cex.main = 0.8)
+lines(x,log(x)-1/x,  col=2)
+lines(x,log(1+x)-1/x,  col=3)
+
+legend("bottomright",c("digamma    ","ln(x)-1/x   ","ln(1+x)-1/x   "), col=1:3, lty=rep(1,3),cex = .8, bty="n")
+
+########### Polygamma Functions####################
+
+ a=seq(0.01, 10, length=100.01)
+ nn=length(a)
+ psi.0=rep(0,nn)
+ psi.1=rep(0,nn)
+ psi.2=rep(0,nn)
+
+ for(i in 1:nn){
+   int.0=function(x) exp(-x)/x-exp(-a[i]*x)/(1-exp(-x))
+   int.1= function(x) x*exp(-a[i]*x)/(1-exp(-x))
+   int.2= function(x) -x^2*exp(-a[i]*x)/(1-exp(-x))
+   psi.0[i]=integrate(int.0, lower=0, upper=Inf)
+   psi.1[i]=integrate(int.1, lower=0, upper=Inf)
+   psi.2[i]=integrate(int.2, lower=0, upper=Inf)
+ }
+# par(mfrow=c(1,2))
+plot(a, psi.0, type="l", col=1, ylim=c(-3,3), ylab="Polygamma(x)", xlab="x",
+ main="Curves of Polygamma Functions", cex.main = 0.8)
+abline(h=0, col=4)
+lines(a, psi.1, type="l", col=2)
+lines(a, psi.2, type="l", col=3)
+legend("bottomright", c("digamma - psi.0      ", "trigamma - psi.1    ", "tetragamma - psi.2   "),
+            col=1:3, bty="n", lty=rep(1,3), cex = .8)
+
+
+###############################################
+########   KLD Convexity           ############
+#############################################
+#############################################
+
+c1=seq(-0.499, 5,length=1000)
+KLD1 = (c1/0.5)*(digamma((0.5+c1)/0.5)-digamma(1))
+
+c2=seq(-0.99, 5,length=1000)
+KLD2 = (c2/1)*(digamma((1+c2)/1)-digamma(1))
+
+c3=seq(-1.99, 5,length=1000)
+KLD3 = (c3/2)*(digamma((2+c3)/2)-digamma(1))
+
+c4=seq(-2.99, 5,length=1000)
+KLD4 = (c4/3)*(digamma((3+c4)/3)-digamma(1))
+plot(c1,KLD1, type="l", lty=1, col=1, ylim=c(0,50), xlim=c(-3,5), 
+main="KL(c) with Different Shape Parameters", xlab="Partial Shape c",
+ylab="KL Distance")
+
+lines(c2,KLD2,lty=2, col=2)
+lines(c3,KLD3,lty=3, col=3)
+lines(c4,KLD4,lty=4, col=4)
+legend("topright", c("a = 0.5","a = 1.0","a = 2.0","a = 3.0"), lty=1:4, col=1:4, bty="n")
+
+
+###############################################
+############     density comparisons
+###############################################
+DensityFun=function(a, C, xlimit, ylimit){
+  b=1
+  x=seq(0,3, length=100)
+  cc=C[1]
+  g1.0=a*b^(-a-cc)*x^(a+cc-1)*exp(-(x/b)^a)/gamma((a+cc)/a)
+  plot(x,g1.0, type="l", col=1, lwd=2, xlim=xlimit, ylim=ylimit, ylab="Density", xlab="Lifetime")
+  cc=C[2]
+  g1.1=a*b^(-a-cc)*x^(a+cc-1)*exp(-(x/b)^a)/gamma((a+cc)/a)
+  lines(x,g1.1, type="l", col=2, lwd=2)
+  cc=C[3]
+  g1.2=a*b^(-a-cc)*x^(a+cc-1)*exp(-(x/b)^a)/gamma((a+cc)/a)
+  lines(x,g1.2, type="l", col=3, lwd=2)
+  cc=C[4]
+  g1.3=a*b^(-a-cc)*x^(a+cc-1)*exp(-(x/b)^a)/gamma((a+cc)/a)
+  lines(x,g1.3, type="l", col=4, lwd=2)
+
+  # title("Effect of the New Parameter c")
+  legend("topright", c(paste("a=", a,", b=1, c =", C[1]),paste("a= ",a,", b=1, c =", C[2]),
+          paste("a= ",a,", b=1, c =", C[3]),paste("a= ",a, ", b=1, c =", C[4])), 
+          lwd=rep(2,4), col=1:4, cex=0.8, bty="n")
+ }
+## Figure 1: positive c values
+par(mfrow=c(2,2), mar=c(4,4,2,2))
+DensityFun(a=0.5, C=c(0, 0.5, 1, 1.5), xlimit=c(0,3), ylimit=c(0,1))
+DensityFun(a=1.0, C=c(0, 0.5, 1, 1.5), xlimit=c(0,3), ylimit=c(0,1))
+DensityFun(a=1.5, C=c(0, 0.5, 1, 1.5), xlimit=c(0,3), ylimit=c(0,1))
+DensityFun(a=2.5, C=c(0, 0.5, 1, 1.5), xlimit=c(0,3), ylimit=c(0,1.5))
+
+NegativeC=function(a, C, pos, xlimit, ylimit){
+  b=1
+  x=seq(0,xlimit[2], length=500)
+  cc=C[1]
+  g0=a*b^(-a-cc)*x^(a+cc-1)*exp(-(x/b)^a)/gamma((a+cc)/a)
+  plot(x,g0, type="l", col=1, lwd=2, ylim=ylimit, xlim=xlimit, ylab="Density", xlab="Lifetime")#, lty=1)
+
+  cc=C[2]
+  g0=a*b^(-a-cc)*x^(a+cc-1)*exp(-(x/b)^a)/gamma((a+cc)/a)
+  lines(x,g0, type="l", col=2, lwd=2)#, lty=2)
+
+  cc=C[3]
+  g0=a*b^(-a-cc)*x^(a+cc-1)*exp(-(x/b)^a)/gamma((a+cc)/a)
+  lines(x,g0, type="l", col=3, lwd=2)#, lty=3)
+
+  cc=C[4]
+  g0=a*b^(-a-cc)*x^(a+cc-1)*exp(-(x/b)^a)/gamma((a+cc)/a)
+  lines(x,g0, type="l", col=4, lwd=2)#, lty=4)
+
+  # title("Effect of the New Parameter c")
+  legend(pos, c(paste("a=", a,", b=1, c =",C[1]),
+                paste("a= ",a,", b=1, c =", C[2]),
+                paste("a= ",a,", b=1, c =", C[3]),
+                paste("a= ",a,", b=1, c =", C[4])), 
+          lwd=rep(2,4), col=1:4, cex=0.8, bty="n")#,lty=1:4 )
+ }
+
+## Figure 2: Negative c values
+par(mfrow=c(2,2), mar=c(4,4,2,2))
+NegativeC(a=0.6, C=c(0, -0.1, -0.3, -0.5), pos="topright", xlimit=c(0,3), ylimit=c(0,1))
+NegativeC(a=4.5, C=c(0, -0.1, -0.3, -0.5)-1.9, pos="topright", xlimit=c(0,2), ylimit=c(0,2))
+NegativeC(a=28,  C=c(0, -0.1, -0.3, -0.5)-27.4, pos="topright", xlimit=c(0,1.5), ylimit=c(0,1.8))
+NegativeC(a=35,  C=c(-32.8,-32.9, -33.1, -33.3), pos="topleft", xlimit=c(0,1.2), ylimit=c(0,2.2))
+
+
+
+
+
+#######################################################
+###              Hazard Rate Function
+#######################################################
+
+###  Figure 4
+Hazard=function(a, xlimit, ylimit){
+  b=1
+  c=0
+  x=seq(0,xlimit[2], length=500)
+  g0=a*b^(-a-c)*x^(a+c-1)*exp(-(x/b)^a)
+  igamma=pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  hrate=g0/igamma
+  plot(x, hrate, type="l", lwd=2, col=1, xlim=xlimit, ylim=ylimit,
+      ylab="Hazard Rate", xlab="lifetime")#, lty=1)
+  ##
+  c=0.3
+  g0=a*b^(-a-c)*x^(a+c-1)*exp(-(x/b)^a)
+  igamma=pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  hrate=g0/igamma
+  lines(x, hrate, type="l", lwd=2, col=2)#, lty=2)
+  ##
+  c=0.6
+  g0=a*b^(-a-c)*x^(a+c-1)*exp(-(x/b)^a)
+  igamma=pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  hrate=g0/igamma
+  lines(x, hrate, type="l", lwd=2, col=3)#, lty=3)
+  ##
+  c=0.9
+  g0=a*b^(-a-c)*x^(a+c-1)*exp(-(x/b)^a)
+  igamma=pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  hrate=g0/igamma
+  lines(x, hrate, type="l", lwd=2, col=4)#, lty=4)
+  ##
+  c=1.2
+  g0=a*b^(-a-c)*x^(a+c-1)*exp(-(x/b)^a)
+  igamma=pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  hrate=g0/igamma
+  lines(x, hrate, type="l", lwd=2, col=5)
+  ###
+  legend("topright", c(paste("a = ", a,", b = ",b,", c = 0"), 
+          paste("a = ", a,", b = ",b,", c = 0.3"),
+          paste("a = ", a,", b = ",b,", c = 0.6"),
+          paste("a = ", a,", b = ",b,", c = 0.9"),
+          paste("a = ", a,", b = ",b,", c = 1.2")),                      
+     col=1:5, lwd=rep(2,5),cex=0.8, bty="n")
+ }
+par(mfrow=c(2,2), mar=c(4,4,2,2))
+
+Hazard(a=0.6, xlimit=c(0, 20), ylimit=c(0,0.6))
+Hazard(a=0.9, xlimit=c(0, 30), ylimit=c(0,1.4))
+Hazard(a=1, xlimit=c(0, 20), ylimit=c(0,1.8))
+Hazard(a=3, xlimit=c(0, 1), ylimit=c(0,5))
+
+
+
+################################
+##### UBT curve c = negative
+
+#### Figure 05
+UBT.rate=function(a, C, xlimit, ylimit, pos){
+  b=1
+  c=C[1]
+  x=seq(0,xlimit[2], length=500)
+  g0=a*b^(-a-c)*x^(a+c-1)*exp(-(x/b)^a)
+  igamma=pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  hrate=g0/igamma
+  plot(x, hrate, type="l", lwd=2, col=1, xlim=xlimit, ylim=ylimit,
+      ylab="Hazard Rate", xlab="lifetime")#, lty=1)
+  ##
+  c=C[2]
+  g0=a*b^(-a-c)*x^(a+c-1)*exp(-(x/b)^a)
+  igamma=pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  hrate=g0/igamma
+  lines(x, hrate, type="l", lwd=2, col=2)#, lty=2)#)
+  ##
+  c=C[3]
+  g0=a*b^(-a-c)*x^(a+c-1)*exp(-(x/b)^a)
+  igamma=pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  hrate=g0/igamma
+  lines(x, hrate, type="l", lwd=2, col=3)#, lty=3)#)
+  ##
+  c=C[4]
+  g0=a*b^(-a-c)*x^(a+c-1)*exp(-(x/b)^a)
+  igamma=pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  hrate=g0/igamma
+  lines(x, hrate, type="l", lwd=2, col=4)#, lty=4)#)
+  ##
+
+  ###
+  legend(pos, c(paste("a = ", a,", b = ",b,", c =",C[1]), 
+          paste("a = ", a,", b = ",b,", c = ",C[2]),
+          paste("a = ", a,", b = ",b,", c = ",C[3]),
+          paste("a = ", a,", b = ",b,", c = ",C[4])),                      
+     col=1:4, lwd=rep(2,4),cex=0.8, bty="n")#, lty=1:4)
+ }
+par(mfrow=c(2,2), mar=c(4,4,2,2))
+# (0, -5.3, -5.4, -5.5, -5.6)
+UBT.rate(a=.7, C=c(0, -0.2, -0.45, -0.699), xlimit=c(0, 5), ylimit=c(0,4), pos="topright")
+UBT.rate(a=1, C=c(0, -0.35, -0.7, -0.98), xlimit=c(0, 5), ylimit=c(0,4), pos="topright")
+UBT.rate(a=1.5, C=c(0, -0.5, -1.0, -1.49), xlimit=c(0, 5), ylimit=c(0,4), pos="bottomright")
+UBT.rate(a=5.7, C=c(0, -5, -5.2, -5.6), xlimit=c(0, 1), ylimit=c(0,10), pos="top")
+
+
+#######################################################
+###              Mean Residual Life Function
+#######################################################
+
+#### Figure MRL
+library(pracma)
+MRL=function(a, xlimit, ylimit){
+  b=1
+  c=0
+  # integral on the numeriator of MRL
+  igamFun = function(x) pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  ###
+  x=seq(0,xlimit[2], length=500)
+  
+   MRLNum.0 = NULL
+   for (i in 1:500){
+    MRLNum.0[i]= integral(igamFun, x[i], Inf, reltol = 1e-12, method = "Kronrod")  
+   }
+
+   MRLDen.0 = pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+   
+   MRL0=MRLNum.0/MRLDen.0
+
+  plot(x, MRL0, type="l", lwd=2, col=1, xlim=xlimit, ylim=ylimit,
+      ylab="Mean Residual Lifetime", xlab="Life Time", lty=1)
+  
+
+  ##
+  c=0.3
+  # integral on the numeriator of MRL
+  igamFun = function(x) pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  ###
+   MRLNum.0.3 = NULL
+   for (i in 1:500){
+    MRLNum.0.3[i]= integral(igamFun, x[i], Inf, reltol = 1e-12, method = "Kronrod")  
+   }
+
+   MRLDen.0.3 = pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+   
+   MRL0.3=MRLNum.0.3/MRLDen.0.3
+  ###
+  lines(x, MRL0.3, type="l", lwd=2, col=2)#, lty=2)
+
+
+  ##
+  c=0.6
+  # integral on the numeriator of MRL
+  igamFun = function(x) pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  ###
+   MRLNum.0.6 = NULL
+   for (i in 1:500){
+    MRLNum.0.6[i]= integral(igamFun, x[i], Inf, reltol = 1e-12, method = "Kronrod")  
+   }
+
+   MRLDen.0.6 = pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+   
+   MRL0.6=MRLNum.0.6/MRLDen.0.6
+  lines(x,  MRL0.6, type="l", lwd=2, col=3)#, lty=3)
+
+  ##
+  c=0.9
+   # integral on the numeriator of MRL
+  igamFun = function(x) pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  ###
+   MRLNum.0.9 = NULL
+   for (i in 1:500){
+    MRLNum.0.9[i]= integral(igamFun, x[i], Inf, reltol = 1e-12, method = "Kronrod")  
+   }
+
+   MRLDen.0.9 = pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+   
+   MRL0.9=MRLNum.0.9/MRLDen.0.9
+  lines(x,  MRL0.9, type="l", lwd=2, col=4)#, lty=4)
+
+  ##
+  c=1.2
+  # integral on the numeriator of MRL
+  igamFun = function(x) pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  ###
+   MRLNum.1.2 = NULL
+   for (i in 1:500){
+    MRLNum.1.2[i]= integral(igamFun, x[i], Inf, reltol = 1e-12, method = "Kronrod")  
+   }
+
+   MRLDen.1.2 = pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+   
+   MRL1.2=MRLNum.1.2/MRLDen.1.2
+  lines(x,  MRL1.2, type="l", lwd=2, col=5)#, lty=5)
+
+  ###
+  legend("topright", c(paste("a = ", a,", b = ",b,", c = 0"), 
+          paste("a = ", a,", b = ",b,", c = 0.3"),
+          paste("a = ", a,", b = ",b,", c = 0.6"),
+          paste("a = ", a,", b = ",b,", c = 0.9"),
+          paste("a = ", a,", b = ",b,", c = 1.2")),                      
+     col=1:5, lwd=rep(2,5),cex=0.8, bty="n")
+ }
+par(mfrow=c(2,2), mar=c(4,4,2,2))
+
+MRL(a=0.6, xlimit=c(0, 20), ylimit=c(1,13))
+MRL(a=0.9, xlimit=c(0, 30), ylimit=c(1,2.5))
+MRL(a=1, xlimit=c(0, 20), ylimit=c(1,2.3))
+MRL(a=3, xlimit=c(0, 1), ylimit=c(0.2,1))
+
+
+################################
+##### UBT curve c = negative
+
+#### Figure UBT MRL
+UBT.MRL=function(a, C, xlimit, ylimit, pos){
+  b=1
+  c=C[1]
+  x=seq(0,xlimit[2], length=500)
+  # integral on the numeriator of MRL
+  igamFun = function(x) pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  ###   MRLNum.0 = NULL
+   for (i in 1:500){
+    MRLNum.0[i]= integral(igamFun, x[i], Inf, reltol = 1e-12, method = "Kronrod")  
+   }
+
+   MRLDen.0 = pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+   
+   MRL0=MRLNum.0/MRLDen.0
+
+  plot(x, MRL0, type="l", lwd=2, col=1, xlim=xlimit, ylim=ylimit,
+      ylab="Mean Residual Lifetime", xlab="Life Time", lty=1)
+  ##
+  c=C[2]
+
+  # integral on the numeriator of MRL
+  igamFun = function(x) pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  ###
+   MRLNum.0.3 = NULL
+   for (i in 1:500){
+    MRLNum.0.3[i]= integral(igamFun, x[i], Inf, reltol = 1e-12, method = "Kronrod")  
+   }
+
+   MRLDen.0.3 = pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+   
+   MRL0.3=MRLNum.0.3/MRLDen.0.3
+  ###
+  lines(x, MRL0.3, type="l", lwd=2, col=2)#, lty=2)
+  ##
+  c=C[3]
+
+   # integral on the numeriator of MRL
+  igamFun = function(x) pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  ###
+   MRLNum.0.9 = NULL
+   for (i in 1:500){
+    MRLNum.0.9[i]= integral(igamFun, x[i], Inf, reltol = 1e-12, method = "Kronrod")  
+   }
+
+   MRLDen.0.9 = pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+   
+   MRL0.9=MRLNum.0.9/MRLDen.0.9
+  lines(x,  MRL0.9, type="l", lwd=2, col=4)#, lty=3)
+
+  ##
+  c=C[4]
+
+  # integral on the numeriator of MRL
+  igamFun = function(x) pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  ###
+   MRLNum.1.2 = NULL
+   for (i in 1:500){
+    MRLNum.1.2[i]= integral(igamFun, x[i], Inf, reltol = 1e-12, method = "Kronrod")  
+   }
+
+   MRLDen.1.2 = pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+   
+   MRL1.2=MRLNum.1.2/MRLDen.1.2
+  lines(x,  MRL1.2, type="l", lwd=2, col=5)#, lty=4)
+  ##
+
+  ###
+  legend(pos, c(paste("a = ", a,", b = ",b,", c =",C[1]), 
+          paste("a = ", a,", b = ",b,", c = ",C[2]),
+          paste("a = ", a,", b = ",b,", c = ",C[3]),
+          paste("a = ", a,", b = ",b,", c = ",C[4])),                      
+     col=1:4, lwd=rep(2,4),cex=0.8, bty="n")#, lty=1:4)
+ }
+par(mfrow=c(2,2), mar=c(4,4,2,2))
+# (0, -5.3, -5.4, -5.5, -5.6)
+UBT.MRL(a=.7, C=c(0, -0.2, -0.45, -0.699), xlimit=c(0, 5), ylimit=c(0,4), pos="bottomright")
+UBT.MRL(a=1, C=c(0, -0.35, -0.7, -0.98), xlimit=c(0, 5), ylimit=c(0,1), pos="bottomright")
+UBT.MRL(a=1.5, C=c(0, -0.5, -1.0, -1.49), xlimit=c(0, 5), ylimit=c(0,1), pos="topright")
+UBT.MRL(a=5.7, C=c(0, -5, -5.2, -5.6), xlimit=c(0, 1), ylimit=c(0,1), pos="topright")
+
+
+
+
+
+
+###########################################################
+###########################################################
+###    Power Analysis of Wald and KLD Tests
+###  
+###   We will use Stacy's original representation
+###   and R package {flexsurv} to generate ramdom
+###   samples from the generalized gamma distribution
+###   aa = shape, scale = bb, kk = pp/aa = (aa+cc)/aa
+###
+###########################################################
+####
+####
+##############  log-likelihood function  #######
+ fn.pwr=function(theta){
+   aa=theta[1]
+   bb=theta[2]
+   pp=theta[3]
+   n=length(xx)
+   lglik=n*log(aa)-n*log(bb)-n*log(gamma(pp/aa))+(pp-1)*sum(log(xx/bb))-sum((xx/bb)^aa)
+   lglik
+   }
+ ##########  gradient vector ######
+ gr.pwr=function(theta){
+   aa=theta[1]
+   bb=theta[2]
+   pp=theta[3]
+   n=length(xx)
+   va=n/aa+(n*pp/aa^2)*digamma(pp/aa)-sum((xx/bb)^aa*log(xx/bb))
+   vb=-n*pp/bb+(aa/bb)*sum((xx/bb)^aa)
+   vp=-(n/aa)*digamma(pp/aa)+sum(log(xx/bb))
+   c(va,vb,vp)
+   }
+
+#####################################
+#########     Power Analysis
+####################################
+library(flexsurv)
+sim.power=function(theta.sim, S, B, nn, alpha){
+   ##
+   ## input parameter must be in the form: teta=c(aa,bb,pp)
+   ## S = number of simulations
+   ## B = number of parametric bootstrap samples
+   ## nn = sample size
+   ## alpha = significance level
+   ##
+   aa.s=theta.sim[1]
+   bb.s=theta.sim[2]
+   pp.s=theta.sim[3]
+   cc.s=theta.sim[3]-theta[1]
+   #####
+   pval.Wald=rep(0,S)
+   pval.KLD=rep(0,S)
+   pval.KLD.bt=rep(0,S)
+   j=1
+   while(j < S){
+   ##### Random the generalized gamma populations (theoretical population)!!!
+   xx=rgengamma.orig(nn, shape=aa.s, scale=bb.s, k=pp.s/aa.s)
+   ##############################################################################################
+   result.sim=optim(c(aa.s,bb.s,pp.s), fn.pwr, gr.pwr, method="BFGS", hessian=TRUE,
+          control=list(maxit=1000, fnscale=-1))
+   if(result.sim$par[1]<0 || result.sim$par[2]< 0 || result.sim$convergence > 0) next
+   mle.s=result.sim$par
+   KLD.s=((mle.s[3]-mle.s[1])/mle.s[1])*(digamma(mle.s[3]/mle.s[1])-digamma(1))
+   ##############################################################################################
+   ##
+   #########################
+   ####  1.  Wlald Test
+   #########################
+   varcov.s=-solve(result.sim$hessian)
+   cov.cc.s=varcov.s[1,1]-2*varcov.s[1,3]+varcov.s[3,3]
+   mle.pp=mle.s[3]
+   mle.aa=mle.s[1]
+   W=(mle.pp-mle.aa)^2/cov.cc.s
+   pval.Wald[j]=1-pchisq(W,1)
+   ##
+   ##############################
+   ####  2. Asympt.KLD Test 
+   ##############################
+   mle.ppw=mle.s[3]
+   mle.aaw=mle.s[1]
+   KLDw=((mle.pp-mle.aa)/mle.aa)*(digamma(mle.pp/mle.aa)-digamma(1))
+   cov.Dw=varcov.s[c(1,3),c(1,3)]
+   v.ppw=(digamma(mle.ppw/mle.aaw)-digamma(1))+(mle.ppw-1)*trigamma(mle.ppw/mle.aaw)
+   v.aaw = -(mle.ppw/mle.aaw^2)*(digamma(mle.ppw/mle.aaw)-digamma(1)+((mle.ppw-mle.aaw)/mle.aaw)*trigamma(mle.ppw/mle.aaw))
+   vvec.w=c(v.aaw, v.ppw)
+   var.kldw=t(vvec.w)%*%cov.Dw%*%(vvec.w)
+   TS.w = KLDw/sqrt(var.kldw)
+   pval.KLD[j]=1-pnorm(TS.w)
+   ##
+   ##############################
+   ###  3. Bootstrap KLD Test
+   ##############################
+     KLD.vec=rep(0, B)
+     i=1
+     while(i< B){
+        aa.bt=mle.s[1]
+        bb.bt=mle.s[2]
+        pp.bt=mle.s[3]
+        cc.bt=mle.s[3] - mle.s[1]
+        theta.bt=c(aa.bt,bb.bt,pp.bt)
+        ### sampling from  Ho: KLD = 0 i.e., Ho: cc = 0.
+        xx=rgengamma.orig(nn, shape=aa.sim, scale=bb.sim, k=1)
+        ##############
+        result.bt=optim(c(aa.bt,bb.bt,pp.bt), fn.pwr, gr.pwr, method="BFGS", hessian=TRUE,
+               control=list(maxit=1000, fnscale=-1))
+        if(result.bt$par[1]<0 || result.bt$par[2]< 0 || result.bt$convergence > 0) next
+        mle.bt=result.sim$par
+        ##########
+        KLD.bt=((mle.bt[3]-mle.bt[1])/mle.bt[1])*(digamma(mle.bt[3]/mle.bt[1])-digamma(1))
+        if (KLD.bt < 0) next
+        KLD.vec[i]=KLD.bt
+        ####
+        #*********************************************
+        #*******   Start tracking iterations  ********
+        for(j in 1:S){
+            for( i in 1:B){
+               cat(" Simulation j = ", j, " & Bootstrap i = ", i, "KLD = ", KLD.sim,"\n")
+             }
+         }
+        #*********** end of tracking  ***************
+        #********************************************
+        i = i+1
+       }
+      ### exit the bootstrap loop
+      pval.KLD.bt[j]=sum(KLD.vec>KLD.s)/B
+      #************  tracking p-values **************************
+      Sys.sleep(2)
+      cat(" JJJJJJJJJJ = ",j,"\n")
+      #cat("\n\n\n Wald.p.value =", pval.Wald[j], "KLD.p.value =",pval.KLD[j]," KLD.boot.p.value =", pval.KLD.bt[j],"\n\n\n" )
+      Sys.sleep(2)
+      #************** End of tracking p-values *****************
+      j = j + 1
+     }
+    
+    power.W=sum(pval.Wald< alpha)/S
+    power.KLD = sum(pval.KLD < alpha)/S
+    power.KLD.bt = sum(pval.KLD.bt < alpha)/S
+    ## return the vector of powers for the three tests
+    c(power.W, power.KLD, power.KLD.bt)
+  }
+
+#######
+sim.power(theta.sim=c(2,3,2), S = 5, B = 100, nn=100, alpha=0.05)
+
+
+####################################################
+####################################################
+###        Hazard Rate Curves for Examples
+####################################################
+####################################################
+
+Hazard.curve=function(a, b,  c,  xlimit){
+ # xlimit is used to define the horizontal window 
+  x=seq(0,xlimi, length=500)
+  g0=a*b^(-a-c)*x^(a+c-1)*exp(-(x/b)^a)
+  igamma=pgamma ((x/b)^a, (a+c)/a, lower=FALSE)* gamma ((a+c)/a)
+  hrate=g0/igamma
+  plot(x, hrate, type="l", lwd=2, col=1, xlim=xlimit,
+      ylab="Hazard Rate", xlab="lifetime")#, lty=1)
+  ##
+}
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,228 @@
+
+##################################################
+###      R Code For Numerical Example
+##################################################
+
+numerical.example = function(xx){
+  library(flexsurv)
+  ############################
+  ##   Generalized Gamma
+  ############################
+  fn=function(theta){
+    aa=theta[1]
+    bb=theta[2]
+    pp=theta[3]
+    n=length(xx)
+    lglik=n*log(aa)-n*log(bb)-n*log(gamma(pp/aa))+(pp-1)*sum(log(xx/bb))-sum((xx/bb)^aa)
+    lglik
+    }
+  gr=function(theta){
+    aa=theta[1]
+    bb=theta[2]
+    pp=theta[3]
+    n=length(xx)
+    va=n/aa+(n*pp/aa^2)*digamma(pp/aa)-sum((xx/bb)^aa*log(xx/bb))
+    vb=-n*pp/bb+(aa/bb)*sum((xx/bb)^aa)
+    vp=-(n/aa)*digamma(pp/aa)+sum(log(xx/bb))
+    c(va,vb,vp)
+   }
+  ####################################################################
+  ################  Finding good initial values ######################
+  ####################################################################
+   library(MASS)
+   shape0=2
+   scale0=1/2
+   MLE=fitdistr(xx, "weibull", list(shape=shape0,scale=scale0))
+   sh=MLE$estimate[1]
+   sc=MLE$estimate[2]
+   #############  optim()   ######################
+   result=optim(c(sh,sc,sh), fn, gr, method="BFGS", hessian=TRUE, control=list(maxit=1000, fnscale=-1))
+   mle=result$par
+   ############ checking Hessian Matrix ###### 
+   # h.bp=-length(xx)/mle[2]
+   # h.pp=-(length(xx)/mle[1]^2)*trigamma(mle[3]/mle[1])
+   ###########################################
+   Hessian = result$hessian
+   varcov=-solve(result$hessian)
+   #####################################################
+   #                 KS Goodness-of-fit Test
+   library(pracma)      # call incomplete gamma function
+  #####################################################
+  pggamma=function(q,aa,bb,pp){
+   n0=length(q)
+   lowinc=NULL
+   for(i in 1:n0) lowinc[i]=as.numeric(gammainc((q[i]/bb)^aa,pp/aa)[1])
+   lowinc/gamma(pp/aa)
+   }
+  KS = ks.test(xx,"pggamma", aa=result$par[1], bb=result$par[2],pp=result$par[3])
+  KS.stats = KS$statistic
+  KS.pval = KS$p.value
+  KS.Summary = cbind(KS.stats = KS.stats, KS.pval = KS.pval)
+
+  ####################################################
+  ###         Wald Test for Ho: aa = 1
+  ###               var(aa)
+  ####################################################
+   var.aa=varcov[1,1]
+   mle.aa=mle[1]
+   W.a=(mle.aa - 1)^2/var.aa
+   pval.a=1-pchisq(W.a,1)
+   W.a.Summary = cbind(a.hat = mle.aa, SE.a = sqrt(var.aa), W.a.stats = W.a, W.a.pval = pval.a)
+
+  ####################################################
+  ###         Wald Test for Ho: bb = 1
+  ###               var(bb)
+  ####################################################
+   var.bb=varcov[2,2]
+   mle.bb=mle[2]
+   W.b=(mle.bb - 1)^2/var.bb
+   pval.b=1-pchisq(W.b,1)
+   W.b.Summary = cbind(b.hat = mle.bb, SE.b = sqrt(var.bb), W.b.stats = W.b,  W.b.pval = pval.b)
+
+  ####################################################
+  ###         Wald Test for Ho: cc = 0
+  ###         cc = pp - aa
+  ###       var(cc) = var(pp) -2*cov(pp,aa) + var(aa)
+  ####################################################
+   cov.cc=varcov[1,1]-2*varcov[1,3]+varcov[3,3]
+   cov.cc
+   mle.pp=mle[3]
+   mle.aa=mle[1]
+   W.c=(mle.pp-mle.aa)^2/cov.cc
+   pval.c=1-pchisq(W.c,1)
+   W.c.Summary = cbind(c.hat= (mle.pp-mle.aa), SE.c = sqrt(cov.cc), W.c.stats = W.c, W.c.pval = pval.c)
+  ####################################################
+  ###         KLD Ho: Dg1g2 = 0
+  ###         cc = pp - aa
+  ###       cov(cc) = var(pp) -2*cov(pp,aa) + var(aa)
+  ####################################################
+   mle.pp=mle[3]
+   mle.aa=mle[1]
+   KLD=((mle.pp-mle.aa)/mle.aa)*(digamma(mle.pp/mle.aa)-digamma(1))
+   cov.D=varcov[c(1,3),c(1,3)]
+     v.pp=(1/mle.aa-1)*(digamma(mle.pp/mle.aa)-digamma(1))+(mle.pp/mle.aa-1)*(1/mle.aa)*trigamma(mle.pp/mle.aa)
+     v.aa=-(mle.pp/mle.aa^2)*(digamma(mle.pp/mle.aa)-digamma(1)+((mle.pp-mle.aa)/mle.aa)*trigamma(mle.pp/mle.aa))
+    vvec=c(v.aa, v.pp)
+   var.kld=t(vvec)%*%cov.D%*%(vvec)
+   SE.kld = sqrt(var.kld)
+   KLD.Stats = KLD/SE.kld
+   KLD.pval=1-pnorm(KLD.Stats)
+   KLD.Summary = cbind(KLD = KLD, KLD.Stats = KLD.Stats, SE.kld = SE.kld,  KLD.pval = KLD.pval)
+   colnames(KLD.Summary) = c("KLD", "KLD.Stats", "SE.kld",  "KLD.pval")
+   rownames(KLD.Summary) = "KLD.Test"
+  ##############################################
+  ####  Sampling distribution of KLD under H0
+  ####      using Monte Carlo Simulation
+  ##############################################
+  B=1000
+  KLD.vec=rep(0, B)
+  i=1
+  while(i< B){
+   aa.sim=mle[1]
+   bb.sim=mle[2]
+   cc.sim=mle[3]
+   pp.sim=aa.sim+cc.sim
+   theta.sim=c(aa.sim,bb.sim,pp.sim)
+   ### sampling from  Ho: KLD = 0 i.e., Ho: cc = 0.
+   xx=rgengamma.orig(length(xx), shape=aa.sim, scale=bb.sim, k=(aa.sim)/aa.sim)
+   ##############
+   fn=function(theta){
+     aa=theta[1]
+     bb=theta[2]
+     pp=theta[3]
+     n=length(xx)
+     lglik=n*log(aa)-n*log(bb)-n*log(gamma(pp/aa))+(pp-1)*sum(log(xx/bb))-sum((xx/bb)^aa)
+     lglik
+     }
+   ##########
+   gr=function(theta){
+     aa=theta[1]
+     bb=theta[2]
+     pp=theta[3]
+     n=length(xx)
+     va=n/aa+(n*pp/aa^2)*digamma(pp/aa)-sum((xx/bb)^aa*log(xx/bb))
+     vb=-n*pp/bb+(aa/bb)*sum((xx/bb)^aa)
+     vp=-(n/aa)*digamma(pp/aa)+sum(log(xx/bb))
+     c(va,vb,vp)
+     }
+   ##########
+   result.sim=optim(c(aa.sim,bb.sim,pp.sim), fn, gr, method="BFGS", hessian=TRUE,
+          control=list(maxit=1000, fnscale=-1))
+   mle.sim=result.sim$par
+   if(result.sim$par[1]<0 || result.sim$par[2]< 0 || result.sim$convergence > 0) next
+  ##########
+   KLD.sim=((mle.sim[3]-mle.sim[1])/mle.sim[1])*(digamma(mle.sim[3]/mle.sim[1])-digamma(1))
+   if (KLD.sim < 0) next
+   KLD.vec[i]=KLD.sim
+   i = i+1
+   cat("\n i = ",i, "\n")
+  }
+  pval.sim=sum(KLD.vec>KLD)/B
+  pval.sim
+  KLD.bt.Summary = cbind(kld.bt.pval = pval.sim)
+  rownames(KLD.bt.Summary) = "Bootstrap.KLD"
+  list(W.a.Summary = W.a.Summary,
+       W.b.Summary = W.b.Summary,
+       W.c.Summary = W.c.Summary,
+       KS.Summary = KS.Summary,
+       KLD.Summary = KLD.Summary,
+       KLD.bt.Summary = KLD.bt.Summary,
+       Hessian = Hessian,
+       varcov = varcov,
+       MLE = mle)
+}
+
+#######################################################################################
+##   Example 1: August -Perfect : Piracicaba River Water Flow, Brazil.
+##  
+## The average flows of water (in m3/s) of the Piracicaba River, Brazil, 
+## between August 1972 and 2014. The data sets were obtained from 
+## the Department of Water Resources and Power agency manager of water 
+## resources of the State of Sao Paulo by Ramos et al [40].  We only use 
+## the August data to fit the GG to the data and report the results of 
+## tests in the following table.
+########################################################################################
+August=c(10.03, 8.92, 8.50, 22.25, 7.91, 7.85, 8.86, 9.43, 7.61, 16.08, 20.30,
+9.88, 9.13, 14.86, 9.70, 8.21, 9.74, 7.66, 11.17, 8.59, 9.34, 6.73,
+10.05, 9.62, 9.67, 9.75, 9.57, 7.42, 11.02, 6.55, 8.73, 7.22, 6.82,
+10.89, 11.50, 12.72, 8.09, 12.25, 10.39, 10.56, 5.78)
+numerical.example(xx = August)  
+
+
+#########################################################################################
+##                    Exanple 2  Modeling Financial Volatility
+##
+##  The data set for this example is taken from the recent work of Afuecheta et al [1]
+##  in which authors proposed several candidate innovations for the GARCH model to
+##  predict the volatility of financial series. The returns data of Litecoin (LTC) for the
+##  period starting from the 24th of October 2013 to the 16th of June 2018 will be used in
+##  this example. The volatility is measured by the standard deviation of daily log-returns
+##  of Litecoin (LTC) taken over non-overlapping windows of a length of 30 days (a 50-day
+##  window was used in the original paper). To avoid rounding-off errors due to the small
+##  magnitude of volatility, we re-scale the volatility by multiplying 100 before fitting the
+##  gamma distribution to re-scaled data.
+#############################################################################################
+LTC = read.csv("https://raw.githubusercontent.com/pengdsci/GG/main/LTC.csv")$LTC
+n0 = length(LTC)
+LTC.n0 = LTC[-n0]
+LTC.1 = LTC[-1]
+log.return = log(LTC.n0/LTC.1)
+volatility = NULL
+N = round(length(log.return)/30)  # number of non-overlap segments
+for (i in 1:(N-1)){
+ volatility[i] = sd(log.return[(1+(i-1)*30):(i*30)])
+ }
+LTC.data = 100*round(volatility,4)
+
+numerical.example(xx = LTC.data)
+
+
+
+
+
+
+
+
+
+
+

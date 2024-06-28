@@ -1,0 +1,192 @@
+
+###########################################################
+###########################################################
+###    Power Analysis of Wald and KLD Tests
+###  
+###   We will use Stacy's original representation
+###   and R package {flexsurv} to generate ramdom
+###   samples from the generalized gamma distribution
+###   aa = shape, scale = bb, kk = pp/aa = (aa+cc)/aa
+###
+###########################################################
+
+
+######################################################################
+#########                 Power Analysis              ################
+######################################################################
+##   Bootstrap Null Distribution for calculating bootstrap p-value
+######################################################################
+
+null.dist = function(nn){
+   theta.null=c(4,2,4)
+   aa.s=theta.null[1]
+   bb.s=theta.null[2]
+   pp.s=theta.null[3]
+   cc.s=theta.null[3]-theta.null[1]
+   B = 10000
+   KLD.NULL=rep(0, B)
+    i=1
+    while(i< (B+1)){
+        aa.bt=aa.s
+        bb.bt=bb.s
+        pp.bt=pp.s
+        cc.bt=pp.s - aa.s
+        theta.bt=c(aa.bt,bb.bt,pp.bt)
+        #####  Random the generalized gamma populations (theoretical population)!!!
+        ### sampling from  Ho: KLD = 0 i.e., Ho: cc = 0.
+        #set.seed(12345)
+        u0 = runif(nn)
+        xx.bt= bb.bt*(qgamma(u0, shape=1))^(1/aa.bt)
+        ##############
+        ##############  log-likelihood function  #######
+        fn.pwr=function(theta){
+           aa=theta[1]
+           bb=theta[2]
+           pp=theta[3]
+           n=length(xx.bt)
+           lglik=n*log(aa)-n*log(bb)-n*log(gamma(pp/aa))+(pp-1)*sum(log(xx.bt/bb))-sum((xx.bt/bb)^aa)
+           lglik
+          }
+        ##########  gradient vector ######
+        gr.pwr=function(theta){
+           aa=theta[1]
+           bb=theta[2]
+           pp=theta[3]
+           n=length(xx.bt)
+           va=(n/aa)+((n*pp)/aa^2)*digamma(pp/aa)-sum((xx.bt/bb)^aa*log(xx.bt/bb))
+           vb=-(n*pp/bb)+(aa/bb)*sum((xx.bt/bb)^aa)
+           vp=-(n/aa)*digamma(pp/aa)+sum(log(xx.bt/bb))
+           c(va,vb,vp)
+          }
+        #############
+        result.bt=optim(c(aa.bt,bb.bt,pp.bt), fn.pwr, gr.pwr, method="BFGS", hessian=TRUE,
+               control=list(maxit=1000, fnscale=-1))
+        if(result.bt$par[1]<0 || result.bt$par[2]< 0 || result.bt$convergence > 0) next
+        mle.bt=result.bt$par
+        ##########
+        KLD.bt=((mle.bt[3]-mle.bt[1])/mle.bt[1])*(digamma(mle.bt[3]/mle.bt[1])-digamma(1))
+        if (KLD.bt < 0) next
+        KLD.NULL[i]=KLD.bt
+        ####
+        i = i+1
+       }
+     KLD.NULL
+    }
+
+###########
+sim.power=function(theta.sim, S, nn, alpha){
+   ## input parameter must be in the form: theta=c(aa,bb,pp)
+   ## S = number of simulations
+   ## B = number of parametric bootstrap samples
+   ## nn = sample size
+   ## alpha = significance level
+   theta=theta.sim
+   aa.s=theta.sim[1]
+   bb.s=theta.sim[2]
+   pp.s=theta.sim[3]
+   cc.s=theta.sim[3]-theta[1]
+   #####
+   pval.KLD.bt=rep(0,S)
+   j=1
+   while(j < (S+1)){
+   #####  Random the generalized gamma populations (theoretical population)!!!
+   #####  Generalized Gamma Distribution (Original Parameterisation
+   u = runif(nn)
+   xx.s= bb.s*(qgamma(u, shape=pp.s/aa.s))^(1/aa.s)
+   ################################################
+   ##############  log-likelihood function  #######
+   fn.pwr=function(theta){
+     aa=theta[1]
+     bb=theta[2]
+     pp=theta[3]
+     n=length(xx.s)
+     lglik=n*log(aa)-n*log(bb)-n*log(gamma(pp/aa))+(pp-1)*sum(log(xx.s/bb))-sum((xx.s/bb)^aa)
+     lglik
+   }
+   ##########  gradient vector ######
+   gr.pwr=function(theta){
+     aa=theta[1]
+     bb=theta[2]
+     pp=theta[3]
+     n=length(xx.s)
+     va=n/aa+(n*pp/aa^2)*digamma(pp/aa)-sum(((xx.s/bb)^aa)*log(xx.s/bb))
+     vb=-n*pp/bb+(aa/bb)*sum((xx.s/bb)^aa)
+     vp=-(n/aa)*digamma(pp/aa)+sum(log(xx.s/bb))
+     c(va,vb,vp)
+   }
+   #############  Error Handling
+   result.sim=optim(c(aa.s,bb.s,pp.s), fn.pwr, gr.pwr, method="BFGS", hessian=TRUE, control=list(maxit=1000, fnscale=-1))
+   if(result.sim$par[1]<0 || result.sim$par[2]< 0 || result.sim$convergence > 0) next
+   res = try(-solve(result.sim$hessian))
+   if(inherits(res, "try-error")) next
+   ##################################
+   mle.s=result.sim$par
+   ##################################
+   ###   Testing Hypothesis
+   ##################################
+   mle.pp=mle.s[3]
+   mle.aa=mle.s[1]
+   KLDw=((mle.pp-mle.aa)/mle.aa)*(digamma(mle.pp/mle.aa)-digamma(1))
+   ### exit the bootstrap loop
+   pval.KLD.bt[j]=sum(KLD.NULL.VEC > KLDw)/B
+   ### ************  tracking p-values ********** 
+   cat("\n Sim j = ", j, "KLD.boot.p.value =", pval.KLD.bt[j],"\n")
+   ###************** End of tracking p-values *****************
+      j = j + 1
+     } 
+   power.KLD.bt = sum(pval.KLD.bt < alpha)/S
+   ## return the vector of powers 
+   power=cbind(power.KLD.bt = power.KLD.bt)
+   power 
+  }
+
+#sim.power(theta.sim=c(4,2,0.5), S = 1000, nn=100, alpha=0.05)
+
+
+#################################   Iterations Start Here  ###############################
+CC = c(-3.5, -3.2, -3, -2.6, -2.5, -2.0, -1.5, -1, -0.5, 0, 1, 1.2, 1.5, 1.8, 2, 2.5, 2.8, 3, 3.3, 3.5)
+pp = 4 + CC
+np = length(pp)
+NN = c(30, 50, 100, 150)
+# 
+power.matrix = matrix(0, ncol = np, nrow = 4)
+#for(i in 1:4){
+#  KLD.NULL.VEC = null.dist(nn=NN[i])
+#  for(j in 1:np) { 
+#     ind.power = sim.power(theta.sim=c(4,2,pp[j]), S = 10000, nn=NN[i], alpha=0.05)
+#     power.matrix[i, j] = ind.power
+#     write.csv(x=ind.power, file="C:\\GG\\simpower.csv")
+#     cat("\n i = ", i, " j = ", j)
+#    }
+#  }
+#################################        Iteration End       ################################
+############  Save Simulation Results
+##  power.sim = as.data.frame(t(power.matrix))
+##  names(power.sim)=c("n30", "n50", "n100", "n150")
+##  write.csv(power.sim, file="C:\\GG\\SimPowerResult.csv")
+sim.power = read.csv("C:\\GG\\SimPowerResult.csv")
+plot(sim.power$ShapeC, sim.power$n30, type="l", col="darkred", ylim=c(0,1),
+     xlab = "Gamma Shape c", ylab="Power",
+     main = "Power Analysis of Monte Carlo Test",
+     cex.main=0.99)
+points(sim.power$ShapeC, sim.power$n30, pch=15, col="darkred", cex = 0.7)
+
+lines(sim.power$ShapeC, sim.power$n50, type="l", col="darkcyan") 
+points(sim.power$ShapeC, sim.power$n50, pch=16, col="darkcyan",  cex = 0.7)
+
+lines(sim.power$ShapeC, sim.power$n100, type="l", col="darkorchid4") 
+points(sim.power$ShapeC, sim.power$n100, pch=17, col="darkorchid4",  cex = 0.7)
+
+lines(sim.power$ShapeC, sim.power$n150, type="l", col="royalblue3") 
+points(sim.power$ShapeC, sim.power$n150, pch=18, col="royalblue3",  cex = 0.7)
+
+legend("topright", c("n= 30", "n= 50", "n=100", "n=150"), pch=15:18, lty=rep(1,4),
+        col=c("darkred","darkcyan","darkorchid4","royalblue3"), cex = 0.8, bty="n")
+
+
+
+
+
+
+
+
