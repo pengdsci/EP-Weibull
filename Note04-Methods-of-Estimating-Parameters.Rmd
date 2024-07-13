@@ -1008,8 +1008,8 @@ Next, we use the BGFS to find the regression coefficients. Two required argument
   
 ### The target function
 objFun = function(P){
-  x=c(6, 9, 12, 14, 30, 35, 40, 47, 51, 55, 60)
-  y=c(14, 28, 50, 70, 89, 94, 90, 75, 59, 44, 27)
+  #x=c(6, 9, 12, 14, 30, 35, 40, 47, 51, 55, 60)
+  #y=c(14, 28, 50, 70, 89, 94, 90, 75, 59, 44, 27)
   A = P[1]
   B = P[2]
   C = P[3]
@@ -1028,8 +1028,24 @@ GrFun = function(P){
 }
 ### Calling optim()
 
-optim(par = c(-1,1,1), fn = objFun, gr = GrFun, method = "BFGS", hessian = TRUE)
+optim(par = c(-1,1,1), fn = objFun, gr = GrFun, method = "BFGS", hessian = TRUE, control = list(maxit=2000, abstol=0.00000001))
 ```
+With the above **least square estimates (LSE)**, we calculate the gradient vector in the following.
+
+
+```{r}
+GrFun(c( -0.1011996, 6.7443581, -18.2536400))
+```
+
+The goodness of the **LSE** is depicted in the following.
+
+```{r}
+plot(x,y)
+lines(x, -0.101199*x^2+ 6.7443581*x -18.2536400, col="red")
+```
+
+
+
 
 
 **Caution**: It is important to check the `convergence code' when using `optim()` If the code is not 0, the algorithm did not converge. The resulting estimated parameters are not correct.
@@ -1054,11 +1070,30 @@ $$
 l(\alpha, \beta) = n[\log(\alpha) + \log (\beta)] + (\beta -1)\sum_{i=1}^n\log (x_i)-\alpha\sum_{i=1}^n x_i^\beta
 $$
 
+Before calling `optim()`, we plot the above log-likelihood surface (a function of parameters) in the following.
+
+```{r}
+# Data set
+dat = c(6.75, 6.83, 7.23, 7.30, 7.50, 7.55, 7.75, 7.89, 7.90,7.94, 8.12, 8.27, 8.32, 8.53, 8.74)
+n = length(dat)
+x = seq(0.01,100, length = 50)
+y = seq(0.01,100, length = 50)
+## log-likelihood
+zfun <- function(a,b){
+  n*log(a) + n*log(b) + (b-1)*sum(log(dat)) - a*sum(dat^b)
+}
+z = outer(x, y, FUN="zfun")
+persp(x, y, z)
+```
+
+
+
+
 The score equations are given by
 
 $$
 \begin{cases} 
-\frac{\partial l(\alpha, \beta)}{\partial \alpha} = \frac{n}{\alpha} + \sum_{i=1}^n x_i^\beta= 0 ,    \\ 
+\frac{\partial l(\alpha, \beta)}{\partial \alpha} = \frac{n}{\alpha} - \sum_{i=1}^n x_i^\beta= 0 ,    \\ 
 \frac{\partial l(\alpha, \beta)}{\partial \beta}= \frac{n}{\beta} + \sum_{i=1}^n \log(x_i) - \alpha \sum_{i=1}^n x_i^\beta \log(x_i)= 0.
 \end{cases} 
 $$
@@ -1084,23 +1119,29 @@ grFun = function(A){
   c(ga,gb)
 }
 ## calling R function optim()
-optim(par = c(1,1), 
+out = optim(par = c(1,1), 
       fn = negLogLik, 
       gr = grFun, 
-      method = "BFGS", 
-      control = list(maxit = 20000,fnscale = -1), 
+      method = "L-BFGS-B", 
+      control = list(maxit = 20000, fnscale = -1), 
       hessian = TRUE)
 # note: fnscale = negative-value will convert the minimization to 
 #       the maximization problem! The default optim() minimize the objective
 #       function with default argument fnscale to be positive in control().
+out
 ```
 
-According to the discussions of local minima and local maxima at the end of section 4.2, the determinant of the Hessian matrix is positive and the top-left corner of the Hessian matrix is less than zero, that is $(\alpha, \beta) = (1.4929771, 0.3664338)$ maximizes the log-likelihood function locally. This means the fitted Weibull distribution has the following density
+The following estimated gradient vector based on the eestimated parameters is given in the following.
 
-$$
-f(x) = 1.4929771\times 0.3664338\times x^{0.3664338 -1} e^{-1.4929771 x^{0.3664338}}.
-$$
+```{r}
+grFun(c(1.6091144, 0.22442778))
+```
 
+The non-zero vector indicates that the $(\alpha, \beta) = (1.6091144, 0.22442778)$ **is not** the desired MLE!
+
+```{r}
+-solve(out$hessian)
+```
 
 **Caution**: By default `optim()` performs minimization, we need to set the control statement in the list to a negative value, for example `fnscale = -1`,  when maximizing the log-likelihood. This is another important point that we need to pay attention to in addition to the convergence code!
 
