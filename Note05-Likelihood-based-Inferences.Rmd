@@ -1,10 +1,11 @@
 ---
 title: "5. Likelihood-based Inferences"
-date: "6/30/2024"
+date: "Updated: 8/3/2024"
 output:
   pdf_document: 
     toc: yes
     number_sections: yes
+    keep_tex: yes
   html_document:
     toc: yes
     toc_float: yes
@@ -123,6 +124,8 @@ knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE,
                       comment = NA)
 ```
+
+
 
 \
 
@@ -409,11 +412,17 @@ $$
 \left\{E_{\mathbf{x}}\left[ \frac{\partial}{\partial \theta} \sum_{i=1}^n \log f(x_i, \theta)\right] \right\}^2 =\left\{ E_{\mathbf{x}}\left[ \frac{\partial }{\partial \theta} \log L(\theta: \mathbf{x})\right] \right\}^2 = 0
 $$
 
-Using the formula $\text{Var}(X) = E(X^2) - [E(X)]^2$ for all random variable $X$, we have
+Using the formula $\text{Var}(X) = E(X^2) - [E(X)]^2$ for all random variable $X$, we have the following important result.
+
+\
+
+<font color="red">**\color{red}Property**:</font> Let $L(\theta)$ be the likelihood function defined based on the iid sample data $\{x_1, x_2, \cdots. x_n \} \sim f_\theta(x)$. Then  
 
 $$
 I_n(\theta) \stackrel{\text{def}}{=} E_{\mathbf{x}}\left[ \left(\frac{\partial}{\partial \theta} \log L( \theta: \mathbf{x}) \right)^2\right] - \left\{E_{\mathbf{x}}\left[ \frac{\partial}{\partial \theta}  \log L(\theta: \mathbf{x})\right] \right\}^2 = \text{Var}_{\mathbf{x}}\left[\log L(\theta: \mathbf{x})\right].
 $$
+
+\
 
 This means that **the Fisher Information $I_n(\theta)$ is the variance of the score function**.
 
@@ -927,6 +936,7 @@ The following are properties of multivariate normal distributions that will be u
 
 3. All **linear combinations of the components** of multivariate normal distribution are also **normal distributions**.
 
+
 \
 
 ## Asymptotic Normality of MLE
@@ -962,24 +972,415 @@ $$
 With the above discussions and notations, we have the following sampling distribution of MLE of $\theta$.
 
 
+\
+
+### MLE Normality for Normal Distribution
+
+To discuss the normality of MLE of a parametric distribution, we first derive the normality of the MLE of $\mu$ and $\sigma^2 \equiv \theta$ in the normal distribution.
+
+\
+
+**A Non-numerical Example**: Assume that $\{x_1, x_2, \cdots, x_n\} \sim N(\mu, \sigma^2)$ with density function
+
+$$
+f(x: \mu, \sigma^2) = \frac{1}{\sqrt{2\pi}\sigma}e^{-\frac{(x-\mu)^2}{2\sigma^2}}.
+$$
+
+The likelihood function is given by
+
+$$
+L(\mu, \sigma^2) = \prod_{i=1}^n \frac{1}{\sqrt{2\pi}\sigma}e^{-\frac{(x_i-\mu)^2}{2\sigma^2}} = \left[\frac{1}{2\pi}\right]^{n/2} (\sigma^2)^{-n/2} e^{-\frac{\sum_{i=1}^n(x_i-\mu)^2}{2\sigma^2}}.
+$$
+The log-likelihood function is given by
+
+$$
+l(\mu, \sigma^2) = -\frac{n}{2}\log(2\pi) - \frac{n}{2} \log(\sigma^2) - \frac{1}{2\sigma^2}\sum_{i=1}^n (x_i-\mu)^2
+$$
+
+To simplify the notation, we let $\theta = \sigma^2$. Since the derivative of a constant is always zero. The reduced log-likelihood function is given by
+
+$$
+l(\mu,\theta) = - \frac{n}{2} \log(\theta) - \frac{1}{2\theta}\sum_{i=1}^n (x_i-\mu)^2.
+$$
+
+The score equations are given by
+
+$$
+\frac{\partial l(\theta, \mu)}{\partial \mu} = \frac{1}{\theta}\sum_{i=1}^n(x_i - \mu).
+$$
+
+
+$$
+\frac{\partial l(\theta, \mu)}{\partial \theta} = -\frac{n}{2}\frac{1}{\theta}+\frac{\sum_{i=1}^n (x_i-\mu)^2}{2\theta^2} = \frac{1}{2\theta}\left[ n- \frac{\sum_{i=1}^n (x_i-\mu)^2}{\theta}\right],
+$$
+
+Solving the above score equation, we have 
+
+$$
+\hat{\mu} = \frac{\sum_{x_i}^n}{n} \ \ \text{ and } \ \ \hat{\theta} = \frac{\sum_{i=1}^n(x_i-\hat{\mu})^2}{n}.
+$$
+
+To find the Hessian matrix, we first find the following second-order partial derivatives.
+
+$$
+\frac{\partial^2 l(\theta, \mu)}{\partial \mu^2} =-\frac{n}{\theta}.
+$$
+
+$$
+\frac{\partial^2 l(\theta, \mu)}{\partial \mu\partial \theta} = -\frac{\sum_{i=1}^n(x_i-\mu)}{\theta^2},
+$$
+
+
+$$
+\frac{\partial^2 l(\theta, \mu)}{\partial \theta^2} = \frac{1}{\theta^2}\left[\frac{n}{2}-\frac{\sum_{}^n(x_i-\mu)^2}{\theta} \right],
+$$
+
+
+To calculate the Fisher Information matrix, we need to expectations of the second-order partial derivatives of the log-likelihood function. Note that
+
+
+$$
+E_X\left[ \sum_{i=1}^n (X_i - \mu)^2 \right] = n\theta \ \ \text{ and } \ \ E_X\left[ \sum_{i=1}^n (X_i - \mu) \right] = 0.
+$$
+
+Then the Fisher Information Matrix is defined to be
+
+$$
+\mathbb{I}_n(\theta, \mu) = \begin{bmatrix}
+     E_X \left(-\frac{\partial^2 l(\theta, \mu)}{\partial \mu^2} \right) &
+     E_X \left(-\frac{\partial^2 l(\theta, \mu)}{\partial \mu \partial \theta} \right)  \\
+     E_X \left(- \frac{\partial^2 l(\theta, \mu)}{\partial \theta\partial \mu}\right) & 
+     E_X \left(-\frac{\partial^2 l(\theta, \mu)}{\partial \theta^2} \right)
+ \end{bmatrix}   
+  = \begin{bmatrix}
+    \frac{n}{\theta}  &  0 \\
+   0 & \frac{n}{2\theta^2}
+  \end{bmatrix}.
+$$
+
+After simple algebra, we have the inverse of Fisher Information matrix $\mathbb{I}^{-1}(\mu, \theta)$ in the following form
+
+$$
+\mathbb{I}^{-1}(\mu, \theta) = \begin{bmatrix}
+                                \frac{\theta}{n} & 0 \\
+                                0  & \frac{2\theta}{n}
+                               \end{bmatrix}.
+$$
+
+Note that calculate the variance of the MLE of $\mu$ and $\theta$ directly in the following
+
+$$
+\text{var}(\hat{\mu}) = \text{var}\left( \frac{\sum_{i=1}^n X_i}{n}\right)= \frac{n\text{var}(X_1)}{n^2} = \frac{\sigma^2}{n} \equiv \frac{\theta}{n}.
+$$
+
+$$
+\text{var}(\hat{\theta}) = \text{var}\left( \frac{\sum_{i=1}^n (X_i-\mu)^2}{n}\right)= \frac{\text{var}\left(\sum_{i=1}^k \sigma\left[\frac{X_1-\mu}{\sigma}\right]^2\right)}{n^2}
+$$
+
+$$
+= \frac{\sigma^2\text{var}\left(\sum_{i=1}^kZ_i^2\right)}{n^2} = \frac{ \theta\text{var}\left(\chi_n^2\right)}{n^2} = \frac{\theta\times 2n}{n^2} = \frac{2\theta}{n} \equiv \frac{2\sigma^2}{n}.
+$$
+
+Therefore, 
+
+$$
+\text{var}\begin{bmatrix}
+\hat{\mu}\\
+\hat{\theta}
+\end{bmatrix}
+=
+\begin{bmatrix}
+\frac{\theta}{n} & 0\\
+0 &\frac{2\theta}{n}
+\end{bmatrix}
+=
+\mathbb{I}_n^{-1}(\mu, \theta)
+$$
+We can show that
+
+$$
+\begin{bmatrix}
+\hat{\mu}\\
+\hat{\theta}
+\end{bmatrix}
+\to_d
+\mathcal{N}\left(
+\begin{bmatrix}
+\mu \\
+\theta
+\end{bmatrix},
+\begin{bmatrix}
+\frac{\theta}{n} & 0\\
+0 &\frac{2\theta}{n}
+\end{bmatrix} \equiv \mathbb{I}_n^{-1}(\mu, \theta)\right).
+$$
+Since $\mathbb{I}_n(\mu, \theta) = n\mathbb{I}_0(\mu, \theta)$, which means $\mathbb{I}^{-1}_n(\mu, \theta) = \frac{1}{n}\mathbb{I}^{-1}_0(\mu, \theta)$, the above result can be re-written as
+
+
+
+$$
+\sqrt{n}\begin{bmatrix}
+\hat{\mu} - \mu\\
+\hat{\theta} - \theta
+\end{bmatrix}
+\to_d
+\mathcal{N}\left(
+\begin{bmatrix}
+0 \\
+0
+\end{bmatrix},
+\begin{bmatrix}
+\theta & 0\\
+0 & 2\theta
+\end{bmatrix} \equiv \mathbb{I}_0^{-1}(\mu, \theta)\right).
+$$
+
+The above expression is also called $\sqrt{n}$- convergence (in distribution). Note that limit distribution in the square-root convergent sequence is independent of the sample size!
+
+<font color = "red">**\color{red}COUTION**</font>: In R functions `optim()` and `nlm()`, the reported Hessian matrices are based on the entire sample, that is, $\mathbb{I}_n$! We need to use
+
+$$
+\begin{bmatrix}
+\hat{\mu} - \mu\\
+\hat{\theta} - \theta
+\end{bmatrix}
+\to_d
+\mathcal{N}\left(
+\begin{bmatrix}
+0 \\
+0
+\end{bmatrix},
+ \mathbb{I}_n^{-1}(\mu, \theta)\right).
+$$
+
+
+The Fisher Information matrix based on a single observation is given by
+
+$$
+\mathbb{I}_0(\theta, \mu) = \frac{\mathbb{I}(\theta, \mu)}{n} = \begin{bmatrix}
+   -\frac{1}{2\theta^2} &  0 \\
+   0 & -\frac{1}{\theta}
+  \end{bmatrix}.
+$$
+
+The inverse of $\mathbb{I}(\theta, \mu)$ is
+
+$$
+\mathbb{I}_0^{-1}(\theta, \mu) = \begin{bmatrix}
+   2\theta^2 &  0 \\
+   0 & \theta
+  \end{bmatrix}.
+$$
+
+$$
+\sqrt{n}\begin{bmatrix}
+   \hat{\theta} \\
+   \hat{\mu}
+  \end{bmatrix} \to N\left( \begin{bmatrix}
+   \theta \\
+   \mu
+  \end{bmatrix},  \begin{bmatrix}
+   2\theta^2 &  0 \\
+   0 & \theta
+  \end{bmatrix} \right).
+$$
+
+This means $\text{var}(\hat{\theta}) = \text{var}(\widehat{\sigma^2}) = 2\theta^2 = 2\sigma^4.$, $\text{var}(\hat{\mu}) = \theta = \sigma^2$, and $\text{cov}(\widehat{\sigma^2}, \hat{\mu}) = \text{cov}( \hat{\mu}, \widehat{\sigma^2}) = 0$.
+
+\
+
+<font color = "red">**\color{red}Comments**</font>: When deriving the variance of the MLE of $\mu$ and $\theta = \sigma^2$ above, we used the following basic facts: let $\{Z_1, Z_2, \cdots, Z_k\}$ be IID standard normal random variables. We know that $Z_i^2 = \chi_1^2$ for $i = 1, 2, \cdots, k$. It can be shown that 
+$$
+\sum_{i=1}^k Z_i^2 = \underbrace{\chi_1^2 + \cdots + \chi_1^2}_\text{k terms} = \chi_k^2 
+$$
+
+\
+
+\
+
+
+**Example**:  Consider 100 data values generated from the standard normal distribution $N(\mu = 0, \theta = 1)$.  We next use another R function `nlm()` - nonlinear maximization algorithm to find the MLE of $\mu$ and $\theta = \sigma^2$. <font color = "blue">**\color{blue}`nlm()` minimizes a target function, we need to take the negative of log-likelihood in the minimization.**</font> 
+
+```{r}
+#x = rnorm(100, 0, 1)
+x=c(1.792805419, 0.342860677, -0.255317312, -1.364983233, -0.056015367, -1.218466020,
+1.794767102, 1.384529093, 1.219889332, 0.276775271, 1.384123185, 1.041670342,
+0.413670003, 0.618146851, -1.637490879, 0.268310316, -0.947094897, 0.939817150,
+0.984654871, -0.336352078, -0.561400723, 0.718517844, 1.082629274, 0.671479957,
+0.527354934, 0.579240071, -0.554011351, -0.413788772, 0.206899723, -1.212571475,
+-0.639332501, -1.442404296, -1.135050924, -0.815642573, -0.623510346, -0.914910322,
+-0.124001632, -1.452480378, -1.199932611, -0.363336267, -1.377401513, -0.178908888,
+0.817410999, 0.341526532, 0.473276632, 0.405464974, 0.633386932, 0.712173086,
+0.861740783, 1.383002535, -1.146744310, -0.836828115, 0.633655387, -0.685368285,
+-1.017187821, -2.031682582, 0.287353704, 0.524274343, -0.847569723, -0.519261653,
+0.127991838, -0.082759387, -0.971874441, -1.440512775, 0.733544637, -0.137988641,
+1.194088165, 0.431961137, -0.104938116, -0.383744374, 1.958910903, 1.172291214,
+0.417051786, 0.177727313, -1.014603979, -0.600795761, 2.029299608, -0.005692817,
+0.342174616, 0.538847659, 1.603139491, -1.833839110, -0.371162834, 0.369336123,
+0.513809154, 1.401956500, -0.629441943, -0.720552255, 0.882058910, 1.272037143,
+2.171273073, -0.219238137, 0.170988722, -1.929036793, 1.890392692, -1.053202796,
+-0.222000459, -0.232437479, 1.882390377, -0.531731514)
+n = length(x)
+###
+negLogLik0 = function(A){
+  a = A[1]
+  b = A[2]
+  (n/2)*log(2*pi) + (n/2)*log(b) + (1/(2*b))*sum((x-a)^2)
+}
+nlm(negLogLik0, p = c(0,1), hessian=TRUE)
+```
+
+Note that the above observed Fisher Information Matrix is *close to* the following theoretical Fisher Information Matrix.
+
+$$
+\mathbb{I}_{n}(\theta, \mu)    
+  = \begin{bmatrix}
+    \frac{n}{\theta}  &  0 \\
+   0 & \frac{n}{2\theta^2}
+  \end{bmatrix}
+  =
+  \begin{bmatrix}
+    \frac{100}{1}  &  0 \\
+   0 & \frac{100}{2\times 1}
+  \end{bmatrix}  
+  =
+  \begin{bmatrix}
+    100  &  0 \\
+   0 & 50
+  \end{bmatrix} .
+  $$
+
+\
+
+
+### The Normality of MLE for General Cases
+
+
+For ease of presentation, we consider the likelihood function with two parameters $\mathbb{\theta} = (\alpha,\beta)$. To study the property of MLE, let $\hat{\mathbb{\theta}} = (\hat{\alpha}, \hat{\beta})$ be the MLE estimated from random sample $\{x_1, x_2, \cdots, x_n \} \sim f_{\theta}(x)$. Denote the data likelihood function
+
+$$
+l(\alpha, \beta) = \sum_{i=1}^n \log f_\theta(x_i).
+$$
+
+We take Taylor expansion of the system of score function $\partial l(\hat{\alpha}, \hat{\beta})/\partial \alpha \approx 0$ and $\partial l(\hat{\alpha}, \hat{\beta})/\partial \beta \approx 0$ at $(\alpha, \beta)$ in the following
+
+$$
+0 \approx \frac{\partial l(\hat{\alpha}, \hat{\beta})}{\partial \alpha}\approx \frac{\partial l({\alpha}, {\beta})}{\partial \alpha} + \frac{\partial^2 l(\alpha, \beta)}{\partial \alpha^2} (\hat{\alpha}-\alpha) + \frac{\partial^2 l(\alpha, \beta)}{\partial\alpha \partial \beta}(\hat{\beta}-\beta).
+$$
+
+$$
+0 \approx \frac{\partial l(\hat{\alpha}, \hat{\beta})}{\partial \beta}\approx \frac{\partial l({\alpha}, {\beta})}{\partial \beta} + \frac{\partial^2 l(\alpha, \beta)}{\partial \beta \partial\alpha} (\hat{\alpha}-\alpha) + \frac{\partial^2 l(\alpha, \beta)}{\partial \beta^2}(\hat{\beta}-\beta).
+$$
+
+We rewrite the above two equations in the matrix form and obtain
+
+$$
+\begin{pmatrix}
+0 \\
+0
+\end{pmatrix} 
+=
+\begin{pmatrix}
+\frac{\partial l(\alpha, \beta)}{\partial \alpha} \\
+\frac{\partial l(\alpha, \beta)}{\partial \beta}
+\end{pmatrix} + 
+\begin{pmatrix}
+\hat{\alpha} - \alpha \\
+\hat{\beta} - \beta
+\end{pmatrix}
+\begin{pmatrix}
+\frac{\partial^2 l(\alpha, \beta)}{\partial \alpha^2} & \frac{\partial^2 l(\alpha, \beta)}{\partial \alpha \partial \beta} \\
+\frac{\partial^2 l(\alpha, \beta)}{\partial \beta \partial \alpha } & \frac{\partial^2 l(\alpha, \beta)}{\partial \beta^2}
+\end{pmatrix}.
+$$
+
+If the second-order partial derivative matrix is invertible, we reexpress the above matrix equation inti the following form
+
+$$
+\sqrt{n}\begin{pmatrix}
+\hat{\alpha} - \alpha \\
+\hat{\beta} - \beta
+\end{pmatrix} = -\sqrt{n}
+\begin{pmatrix}
+\frac{\partial l(\alpha, \beta)}{\partial \alpha} \\
+\frac{\partial l(\alpha, \beta)}{\partial \beta}
+\end{pmatrix}
+\begin{pmatrix}
+\frac{\partial^2 l(\alpha, \beta)}{\partial \alpha^2} & \frac{\partial^2 l(\alpha, \beta)}{\partial \alpha \partial \beta} \\
+\frac{\partial^2 l(\alpha, \beta)}{\partial \beta \partial \alpha } & \frac{\partial^2 l(\alpha, \beta)}{\partial \beta^2}
+\end{pmatrix}^{-1}.
+$$
+
+Note that
+
+$$
+-\begin{pmatrix}
+\frac{\partial^2 l(\alpha, \beta)}{\partial \alpha^2} & \frac{\partial^2 l(\alpha, \beta)}{\partial \alpha \partial \beta} \\
+\frac{\partial^2 l(\alpha, \beta)}{\partial \beta \partial \alpha } & \frac{\partial^2 l(\alpha, \beta)}{\partial \beta^2}
+\end{pmatrix}^{-1} \to_p \mathbb{I}^{-1}_n(\alpha, \beta) \ \ \text{ and } \ \ \begin{pmatrix}
+\frac{\partial l(\alpha, \beta)}{\partial \alpha} \\
+\frac{\partial l(\alpha, \beta)}{\partial \beta}
+\end{pmatrix} \to_d \mathcal{N}\left(
+\begin{pmatrix}
+0 \\
+0
+\end{pmatrix},
+\mathbb{I}_n(\alpha, \beta)
+\right)
+$$
+
+Using the formula $\text{var}(AX) = A^T \text{var}(X) A$ for any scalar matrices, we have
+
+$$
+\text{var}\left\{ -\sqrt{n}
+\begin{pmatrix}
+\frac{\partial l(\alpha, \beta)}{\partial \alpha} \\
+\frac{\partial l(\alpha, \beta)}{\partial \beta}
+\end{pmatrix}
+\begin{pmatrix}
+\frac{\partial^2 l(\alpha, \beta)}{\partial \alpha^2} & \frac{\partial^2 l(\alpha, \beta)}{\partial \alpha \partial \beta} \\
+\frac{\partial^2 l(\alpha, \beta)}{\partial \beta \partial \alpha } & \frac{\partial^2 l(\alpha, \beta)}{\partial \beta^2}
+\end{pmatrix}^{-1} \right\} =
+n [\mathbb{I}_n^{-1}(\alpha, \beta)]^T\text{var}\left[ 
+                        \begin{pmatrix}
+\frac{\partial l(\alpha, \beta)}{\partial \alpha} \\
+\frac{\partial l(\alpha, \beta)}{\partial \beta}
+\end{pmatrix}
+                        \right] \mathbb{I}_n^{-1}(\alpha, \beta)
+$$
+
+$$
+=n [\mathbb{I}_n^{-1}(\alpha, \beta)]^T\mathbb{I}(\alpha, \beta) \mathbb{I}_n^{-1}(\alpha, \beta) = n\mathbb{I}_n^{-1}(\alpha,\beta) = \left(\frac{\mathbb{I}_n(\alpha, \beta)}{n}\right)^{-1} = \mathbb{I}_0^{-1}(\alpha, \beta).
+$$
+
+We used the fact that the Fisher Information Matrix is symmetric in the above derivation. To summarize, we have the following theorem
+
+\
+
 **Theorem**: (*Asymptotic normality of MLE*) Under some regularity conditions, the MLE of $\theta$ based on $\{x_1, x_2, \cdots, x_n \}\stackrel{\text{iid}}{\sim} f(x:\theta)$ has the following asymptotic normality
 
 $$
-\sqrt{n}(\hat{\theta} - \theta) \stackrel{\text{approx}}{\rightarrow_p} \mathcal{N}\left[\mathbf{0}, \mathbb{I}_0^{-1}(\theta)\right].
+\sqrt{n}(\hat{\theta} - \theta) \stackrel{\text{approx}}{\rightarrow_d} \mathcal{N}\left[\mathbf{0}, \mathbb{I}_0^{-1}(\theta)\right].
 $$
 
-Since $\theta$ in the covariance matrix $\mathbb{I}_0^{-1}$ is unknown. When making inferences, we use $\widehat{\mathbb{I}_0(\theta)} = \mathbb{I}_0(\hat{\theta})$.
-
-<font color = "red">**\color{red}Remarks**:</font>
-
-1. $\sqrt{n}(\hat{\theta} - \theta)$ is approximately normally distributed when the sample size is large. The variance of $\sqrt{n}(\hat{\theta} - \theta)$ is $\mathbb{I}_0^{-1}(\theta)$ which is independent of the sample size and is defined based on the individual random data point.
-
-2. $\theta$ is the unknown parameter and $\hat{\theta}$ is the MLE of $\theta$.
-
-3. $\sqrt{n}(\hat{\theta} - \theta)$ can be considered as a sequence of random variables (indexed by the sample size $n$). $\rightarrow_p$ stands for **converges in distribution**.
+$\rightarrow_d$ means the convergence to a distribution. Since $\theta$ in the covariance matrix $\mathbb{I}_0^{-1}$ is unknown. When making inferences, we use $\widehat{\mathbb{I}_0(\theta)} = \mathbb{I}_0(\hat{\theta})$.
 
 
 \
+
+<font color = "red">**\color{red}Remarks**:</font>
+
+2. $\sqrt{n}(\hat{\theta} - \theta)$ can be considered as a sequence of random variables (indexed by the sample size $n$). $\rightarrow_p$ stands for **converges in distribution**.
+
+
+2. $(\hat{\theta} - \theta)$ is approximately normally distributed when the sample size is large. The variance of $(\hat{\theta} - \theta)$ is $\mathbb{I}_n^{-1}(\theta)$. That is,
+
+$$
+(\hat{\theta} - \theta) \sim \mathcal{N}\left[ \mathbb{0}, \mathbb{I}^{-1}_n(\theta)\right].
+$$
+
+\
+
 
 **Example**: The following data represent active repair times (in hours) for an airborne communication transceiver.
 
@@ -1013,8 +1414,6 @@ plot_ly(x = x1, y = y1, z = z) %>% add_surface()
 ```
 
 
-
-
 The score equations are given by
 
 $$
@@ -1025,6 +1424,9 @@ $$
 $$
 
 We next write R code to find the MLE and the Hessian matrix (the negative observed Fisher Information Matrix).
+
+<font color = "red">**\color{red}CAUTION**</font>:  <font color = "blue">*\color{blue}in the R optimization function `optim()` reports the hessian matrix based on `entire observations`*</font>.
+
 
 
 ```{r}
@@ -1054,32 +1456,22 @@ MLE = results$par
 Counts = results$counts
 Convergence = results$convergence
 Hessian = results$hessian
-I0.inv = -solve(Hessian/n)
+I0.inv = -solve(Hessian)
 out = list(MLE = MLE, Counts = Counts, Convergence = Convergence, Hessian = Hessian, I0.inv = I0.inv)
 out
 ```
+
+We evaluate the gradient vector at the MLE in the following. Theoretically speaking, the gradient vector is supposed to be close to 0. However, how the gradient vector is close to zero is dependent on the shape of the likelihood surface near the MLE.
 
 ```{r}
 grFun(c(0.3377259, 0.8896178)) 
 ```
 
 
-```{r}
-negLogLik0 = function(A){
-  a = A[1]
-  b = A[2]
-  -(n*log(a) + n*log(b) + (b-1)*sum(log(x)) - a*sum(x^b))
-}
-nlm(negLogLik0, p = c(1,1), hessian=TRUE)
-```
-
-
-
-
 Therefore, the sampling distribution of $(\hat{\alpha}, \hat{\beta})$ is given by
 
 $$
-\sqrt{n}\begin{pmatrix}
+\begin{pmatrix}
  \hat{\alpha} - \alpha  \\
  \hat{\beta} - \beta 
 \end{pmatrix} \rightarrow_p \mathcal{N} \left[ 
@@ -1088,8 +1480,8 @@ $$
                                0
                                \end{pmatrix},
                                \begin{pmatrix}
-                               0.2631785 & -0.2487531 \\
-                               -0.2487531 & 0.4149552
+                               0.005848388 & -0.005527848 \\
+                               -0.005527848 & 0.009221250
                                \end{pmatrix}
                                \right]
 $$
@@ -1100,44 +1492,53 @@ $$
 
 2. The covariance matrix in the asymptotic normality of MLE requires $\mathbb{I}_0(\theta)$. The observed Fisher information $\mathbb{\hat{\theta}}$ is equal to the Hessian matrix, $\mathbb{H}_n$, divided by sample size $n$. That is, $\mathbb{I}_0(\hat{\theta}) = -\mathbb{H(\theta:\mathbf{x})}/n.$
 
-3. $\text{var}[\sqrt{n}(\hat{\alpha})-\alpha] = n\text{var}(\hat{\alpha}) = 0.2631785$ which implies that $\text{var}(\hat{\alpha}) = 0.2631785/45 \approx 0.005848411$; $\text{var}[\sqrt{n}(\hat{\beta})-\beta] = n\text{var}(\hat{\beta}) = 0.4149552$ which implies that $\text{var}(\hat{\beta}) = 0.4149552/45 \approx  0.009221227$; and $\text{cov}(\hat{\alpha}, \hat{\beta}) = -0.2487531/45 = -0.005527847$.
+3. $\text{var}[\hat{\alpha}-\alpha] = \text{var}(\hat{\alpha}) = 0.005848388$; $\text{var}(\hat{\beta}) = 0.4149552/45 \approx  0.009221227$; and $\text{cov}(\hat{\alpha}, \hat{\beta}) = -0.2487531/45 = -0.005527847$.
 
 
-4. Let $\hat{\omega} = c\hat{\alpha} + d\hat{\beta}$. Then $\text{var}(\hat{\omega}) = \text{var}[ c\hat{\alpha} + d\hat{\beta}] = c^2\text{var}(\hat{\alpha}) + d^2\text{var}(\hat{\beta}) + 2cd\text{cov}(\hat{\alpha}, \hat{\beta}) = 0.005848411c^2 + 0.009221227d^2 - 2\times 0.005527847cd$.
+4. Let $\hat{\omega} = c\hat{\alpha} + d\hat{\beta}$. Then $\text{var}(\hat{\omega}) = \text{var}[ c\hat{\alpha} + d\hat{\beta}]$ $= c^2\text{var}(\hat{\alpha}) + d^2\text{var}(\hat{\beta}) + 2cd\text{cov}(\hat{\alpha}, \hat{\beta})$ $= 0.005848411c^2 + 0.009221227d^2 - 2\times 0.005527847cd$.
+
 
 \
 
+In the following, we use `nlm()` to find the MLE of $\alpha$ and $\beta$. Note that the hessian matrix is reported in `nlm()` at the minimum. Hence, it is a positive semi-definite matrix. It is different from the hessian matrix reported in `optim()` which is negative semi-definite.
 
+```{r}
+# Data set
+x = c(0.2, 0.3, 0.5, 0.5, 0.5, 0.5, 0.6, 0.6, 0.7, 0.7, 0.7, 0.8, 0.8, 1.0, 1.0, 1.0, 1.0, 
+      1.1, 1.3, 1.5, 1.5, 1.5, 1.5, 2.0, 2.0, 2.2, 2.5, 3.0, 3.0, 3.3, 3.3, 4.0, 4.0, 4.5, 
+      4.7, 5.0, 5.4, 5.4, 7.0, 7.5, 8.8, 9.0, 10.3, 22.0, 24.5)
+n = length(x)
+##
+negLogLik0 = function(A){
+  a = A[1]
+  b = A[2]
+  -(n*log(a) + n*log(b) + (b-1)*sum(log(x)) - a*sum(x^b))  # negate log-likelihood!
+}
+nlm(negLogLik0, p = c(1,1), hessian=TRUE)
+```
+
+\
 
 # Inference of MLE
 
-Three types of inferences will be discussed in this section: confidence intervals, and significance tests.
+Two types of inferences will be discussed in this section: confidence intervals, and significance tests. Among many MLE-based hypothesis tests, we will introduce the three most important tests.
 
 ## Confidence Intervals
 
 Because MLEs are asymptotically normally distributed, we can use the same procedure as we used in introductory statistics. Assuming the confidence level in the subsequent discussion is $95\%$. 
 
-For convenience, let $(\hat{\theta}_1, \hat{\theta}_2)$ be the MLE of $(\theta_1, \theta_2)$ based on an IID sample $\{x_1, x_2, \cdots, x_n \} \stackrel{\text{i.i.d}}{\sim} f(x, \theta_1, \theta_2)$. The asymptotic sampling distribution of the MLE is assumed to be
+For convenience, we consider a two-parameter case. Let $(\hat{\theta}_1, \hat{\theta}_2)$ be the MLE of $(\theta_1, \theta_2)$ based on an IID sample $\{x_1, x_2, \cdots, x_n \} \stackrel{\text{i.i.d}}{\sim} f(x, \theta_1, \theta_2)$. Let $\mathbb{I}_n(\theta_1, \theta_2)$ be the Hessian matrix based on the entire sample. $\mathbb{I}_0(\theta_1, \theta_2) = \mathbb{I}_n(\theta_1, \theta_2)/n$.
+
+We will use the Hessian matrix reported in the R function `optim()`. For convenience, we denote
 
 $$
-\sqrt{n}
-\begin{pmatrix}
-   \hat{\theta}_1 - \theta_1 \\
-   \hat{\theta}_2 - \theta_2
-\end{pmatrix} \stackrel{\text{approx}}{\rightarrow_p}
-\mathcal{N}_2
-\left[
-     \begin{pmatrix}
-      0 \\
-      0
-     \end{pmatrix},
-     \begin{pmatrix}
+\mathbb{I}^{-1}_n(\theta_1, \theta_2) = \begin{pmatrix}
       \sigma_1^2  & \sigma_{12} \\
       \sigma_{12} & \sigma_2^2
-     \end{pmatrix}
-\right],
+     \end{pmatrix} 
 $$
-which can be re-expressed in the following form
+
+Which is available in `optim()`. The asymptotic sampling distribution of the MLE is assumed to be in the following form
 
 $$
 \begin{pmatrix}
@@ -1150,7 +1551,7 @@ $$
       \theta_1 \\
       \theta_2
      \end{pmatrix},
-     \frac{1}{n}\begin{pmatrix}
+     \begin{pmatrix}
       \sigma_1^2  & \sigma_{12} \\
       \sigma_{12} & \sigma_2^2
      \end{pmatrix}
@@ -1159,7 +1560,7 @@ $$
 where
 
 $$
-\text{var}(\hat{\theta}_1) = \frac{\sigma_1^2}{n}, \ \ \text{var}(\hat{\theta}_2) = \frac{\sigma_2^2}{n}, \ \  \text{ and } \ \ \text{cov}(\hat{\theta}_1, \hat{\theta}_2) = \frac{\sigma_{12}}{n}.
+\text{var}(\hat{\theta}_1) = {\sigma_1^2}, \ \ \text{var}(\hat{\theta}_2) = \sigma_2^2, \ \  \text{ and } \ \ \text{cov}(\hat{\theta}_1, \hat{\theta}_2) = \sigma_{12}.
 $$
 
 
@@ -1168,31 +1569,30 @@ $$
 
 $$
 \begin{pmatrix}
-   \hat{\alpha}   \\
-   \hat{\beta} 
-\end{pmatrix} \stackrel{\text{approx}}{\rightarrow_p}
-\mathcal{N}_2
-\left[
-     \begin{pmatrix}
-      \alpha \\
-      \beta
-     \end{pmatrix},
-     \frac{1}{45}\begin{pmatrix}
-        0.2631785 & -0.2487531 \\
-       -0.2487531 & 0.4149552
-     \end{pmatrix}
-\right],
+ \hat{\alpha} - \alpha  \\
+ \hat{\beta} - \beta 
+\end{pmatrix} \rightarrow_p \mathcal{N} \left[ 
+                               \begin{pmatrix}
+                               0 \\
+                               0
+                               \end{pmatrix},
+                               \begin{pmatrix}
+                               0.005848388 & -0.005527848 \\
+                               -0.005527848 & 0.009221250
+                               \end{pmatrix}
+                               \right]
 $$
 
 this implies
 
 $$
-\text{var}(\hat{\alpha}) = \frac{0.2631785}{45} = 0.005848411  \ \ \text{and} \ \ \text{var}(\hat{\beta}) = \frac{0.4149552}{45} = 0.009221227,
+\text{var}(\hat{\alpha})  = 0.005848388  \ \ \text{and} \ \ \text{var}(\hat{\beta}) = 0.009221250,
 $$
+
 and
 
 $$
-\text{cov}(\hat{\alpha}, \hat{\beta}) = -\frac{0.2487531}{45} = 0.005527847.
+\text{cov}(\hat{\alpha}, \hat{\beta}) = 0.005527847.
 $$
 Recall that the MLE of $(\alpha, \beta)$ in the example are $\hat{\alpha} = 0.3377271$ and $\hat{\beta} = 0.8896159$.
 
@@ -1209,7 +1609,7 @@ $$
 In the above **example**, the $95\%$ confidence interval for $\alpha$ is
 
 $$
-\hat{\alpha}_1 \pm z_{0.975}\sqrt{\frac{\hat{\sigma}_1^2}{45}} = 0.3377271 \pm 1.96 \times \sqrt{\frac{0.2631785}{45}} = (0.1878363, 0.4876179).
+\hat{\alpha}_1 \pm z_{0.975}\sqrt{\hat{\sigma}_1^2} = 0.3377271 \pm 1.96 \times \sqrt{0.005848388 } = (0.1878366, 0.4876176).
 $$
 
 * **Lower and Upper Confidence Intervals**
@@ -1217,7 +1617,7 @@ $$
 The $95\%$ lower and upper confidence intervals for $\alpha$ are given respectively by
 
 $$
-\left(-\infty, \hat{\theta}_1 + z_{0.95}\frac{\hat{\sigma}_1}{\sqrt{n}}\right) \ \ \text{ and } \ \ \left(\hat{\theta}_1 - z_{0.95}\frac{\hat{\sigma}_1}{\sqrt{n}}, \infty\right)
+\left(-\infty, \hat{\theta}_1 + z_{0.95}\hat{\sigma}_1\right) \ \ \text{ and } \ \ \left(\hat{\theta}_1 - z_{0.95}\hat{\sigma}_1, \infty\right)
 $$
 
 * **Linear Confidence Intervals**
@@ -1255,8 +1655,8 @@ $$
       \beta
      \end{pmatrix},
      \begin{pmatrix}
-      \sigma_1^2/n  & \sigma_{12}/n \\
-      \sigma_{12}/n & \sigma_2^2/n
+      \sigma_1^2  & \sigma_{12} \\
+      \sigma_{12} & \sigma_2^2
      \end{pmatrix}
 \right],
 $$
@@ -1264,7 +1664,7 @@ $$
 Based on the above asymptotic normality, the test statistic for the above hypothesis is defined to be
 
 $$
-TS = \frac{\hat{\beta}-1}{\hat{\sigma}_2/\sqrt{n}} \sim N(0, 1).
+TS = \frac{\hat{\beta}-1}{\hat{\sigma}_2} \sim N(0, 1).
 $$
 
 The p-value of the above two-tail test is 
@@ -1284,10 +1684,29 @@ $$
 \mathbb{H}_0: \ \ \beta = 1 \ \ \text{  v.s. } \ \ \mathbb{H}_a: \ \ \beta \ne 1.
 $$
 
+Recall the asymptotic results of the MLE
+
+$$
+\begin{pmatrix}
+ \hat{\alpha} - \alpha  \\
+ \hat{\beta} - \beta 
+\end{pmatrix} \rightarrow_p \mathcal{N} \left[ 
+                               \begin{pmatrix}
+                               0 \\
+                               0
+                               \end{pmatrix},
+                               \begin{pmatrix}
+                               0.005848388 & -0.005527848 \\
+                               -0.005527848 & 0.009221250
+                               \end{pmatrix}
+                               \right]
+$$
+
+
 The test statistic is
 
 $$
-TS = \frac{0.8896178 - 1}{\sqrt{0.4149563/45}} = -1.149487
+TS = \frac{0.8896178 - 1}{\sqrt{0.009221250}} = -1.149487
 $$
 The p-value is
 
@@ -1327,163 +1746,6 @@ $$
 **Remark**: All $\chi^2$ tests are right-tailed!
 
 \
-
-
-## Score Test
-
-Consider the null hypothesis
-
-$$
-H_0: \ \ \theta = \theta_0.
-$$
-which defines a **restricted parameter space**. We also need the *restricted MLE* before defining the test statistic. Let 
-
-$$
-\theta_{\text{rMLE}} = \arg\max_{\theta \in \Theta_R}\log L(\theta:\mathbf{x}).
-$$
-
-We have shown at the beginning of the section that 
-
-$$
-E\left[ \frac{\partial}{\partial \theta} \log L(\theta:\mathbf{x}) \right] = \mathbf{0},
-$$
-
-and
-
-$$
-\mathbb{I}_n(\theta) = -E\left[\left(\frac{\partial}{\partial\theta}\log L(\theta, \mathbf{x})\right)\left(\frac{\partial}{\partial\theta}\log L(\theta, \mathbf{x})\right)^T \right]
-$$
-
-We also showed that
-
-$$
-\text{var} \left[\frac{\partial}{\partial \theta} \log L(\theta:\mathbf{x})\right] = \mathbb{I}_n(\theta)
-$$
-
-and
-
-$$
-\frac{\partial}{\partial \theta} \log L(\theta:\mathbf{x}) \rightarrow_p \mathcal{N}_k\left[\mathbf{0}, \mathbb{I}_n(\theta)\right]
-$$
-where $k = \dim (\Theta) - \dim (\Theta_R)$.
-
-\
-
-**Theorem**: with the above notations and some regularity conditions, the following asymptotic normality holds.
-
-$$
-S_n = \left[\frac{\partial}{\partial\theta}\log L(\theta_{\text{rMLE}}, \mathbf{x})\right]^T \mathbb{I}_n^{-1}(\theta_{\text{rMLE}})\left[\frac{\partial}{\partial\theta}\log L(\theta_{\text{rMLE}}, \mathbf{x})\right] \rightarrow_p \chi^2_k,
-$$
-
-where $\theta_{\text{rMLE}}$ is the restricted MLE under the null hypothesis.
-
-
-**Example (continued)**: The Weibull example revisited. We still consider 
-
-$$
-H_0: \ \ \beta = 1 \ \ \text{vs} \ \ H_a: \beta \ne 1.
-$$
-
-Under $H_0: \ \ \beta = 1$, the Weibull distribution is reduced to the exponential distribution with density $f(x) = \alpha e^{-\alpha x}$. Therefore, the restricted MLE is $\theta_{\text{rMLE}} = (\hat{\alpha}, \beta=1) = (1/\bar{x},1)$.
-
-
-To define the score test statistic, we need to find the gradient vector and the Fisher information matrix based on the unrestricted parameter space.
-
-The log-likelihood function is
-
-$$
-l(\alpha, \beta) = n[\log(\alpha) + \log (\beta)] + (\beta -1)\sum_{i=1}^n\log (x_i)-\alpha\sum_{i=1}^n x_i^\beta
-$$
-
-The score functions are given by
-
-$$
-\begin{cases} 
-\frac{\partial l(\alpha, \beta)}{\partial \alpha} = \frac{n}{\alpha} - \sum_{i=1}^n x_i^\beta,    \\ 
-\frac{\partial l(\alpha, \beta)}{\partial \beta}= \frac{n}{\beta} + \sum_{i=1}^n \log(x_i) - \alpha \sum_{i=1}^n x_i^\beta \log(x_i).
-\end{cases} 
-$$
-
-```{r}
-x= c(0.2, 0.3, 0.5, 0.5, 0.5, 0.5, 0.6, 0.6, 0.7, 0.7, 0.7, 0.8, 0.8, 1.0, 1.0, 1.0, 1.0, 
-     1.1, 1.3, 1.5, 1.5, 1.5, 1.5, 2.0, 2.0, 2.2, 2.5, 3.0, 3.0, 3.3, 3.3, 4.0, 4.0, 4.5, 
-     4.7, 5.0, 5.4, 5.4, 7.0, 7.5, 8.8, 9.0, 10.3, 22.0, 24.5)
-n = length(x)
-##
-lb = n + sum(log(x)) - (1/mean(x))*sum(x*log(x))
-lb
-```
-
-The Score vector is
-
-$$
-U(\theta_{\text{rMLE}}) = \left[ 0, -11.12719 \right]
-$$
-and
-
-$$
-\frac{\partial^2}{\partial \alpha^2}\log L(\alpha:\mathbf{x}) = -\frac{n}{\alpha^2}, \ \ \text{and} \ \  \frac{\partial^2}{\partial \alpha \partial \beta}\log L(\alpha:\mathbf{x}) = -\sum_{i=1}^n x_i^\beta \log(x_i)
-$$
-
-$$
-\frac{\partial^2}{\partial \beta^2}\log L(\alpha:\mathbf{x}) = -\frac{n}{\beta^2} -\sum_{i=1}^n x_i^\beta \log(x_i)
-$$
-
-```{r}
-## Inverse observed Fisher Information matrix
-x= c(0.2, 0.3, 0.5, 0.5, 0.5, 0.5, 0.6, 0.6, 0.7, 0.7, 0.7, 0.8, 0.8, 1.0, 1.0, 1.0, 1.0, 
-     1.1, 1.3, 1.5, 1.5, 1.5, 1.5, 2.0, 2.0, 2.2, 2.5, 3.0, 3.0, 3.3, 3.3, 4.0, 4.0, 4.5, 
-     4.7, 5.0, 5.4, 5.4, 7.0, 7.5, 8.8, 9.0, 10.3, 22.0, 24.5)
-n = length(x)
-##
-laa = -n*mean(x)
-lab = -sum(x*log(x))
-lbb = -n-sum(x*log(x))
-IIn = matrix(c(laa, lab, lab, lbb), nrow=2)
-IIn.inv = solve(IIn)
-IIn.inv
-```
-
-The observed Fisher information matrix based on the restricted MLE is given by
-
-$$
-\mathbb{I}_n^{-1}(\theta_{\text{rMLE}}) = 
-    \begin{bmatrix}
-       0.009319889 & -0.008137795 \\
-       -0.008137795 & 0.004287062 
-    \end{bmatrix}      
-$$
-
-
-```{r}
-## Score test statistic
-Sn=c(0, -11.12719)%*% IIn.inv %*% c( 0, -11.12719)
-Sn
-```
-
-The score test statistic is
-
-$$
-S_n = [0, -11.12719]\begin{bmatrix}
-       0.009319889 & -0.008137795 \\
-       -0.008137795 & 0.004287062 
-    \end{bmatrix}
-    \begin{bmatrix}
-       0  \\
-       -11.12719
-    \end{bmatrix} \approx 0.5307998.
-$$
-
-Since $S_n \rightarrow_p \chi^2_1$. The p-value of the score test is given by
-
-$$
-\text{p-value} = P[\chi^2_1 > 0.5307998] = 0.4662708.
-$$
-
-The null hypothesis $H_0: \beta = 1$ is not rejected. This is consistent with the Wald $\chi^2$ test.
-
-
-
 
 \
 
@@ -1575,7 +1837,7 @@ $$
 =45\log(0.2757353)-0.2757353\times 163.2 = -102.9741.
 $$
 
-The log-likelihood curve and its critical point is given in the figure below.
+The log-likelihood curve and its critical point are given in the figure below.
 
 
 ```{r fig.align='center', fig.width=6, fig.height=4, fig.cap="log-likelihood curve with critical point labeled in red."}
@@ -1647,7 +1909,177 @@ $$
 
 This implies that there is an overfit issue if we choose the two-parameter Weibull distribution to fit the given data. The one-parameter exponential is a better choice for this application.
 
+\
 
+\
+
+
+
+## Score Test
+
+Consider the null hypothesis
+
+$$
+H_0: \ \ \theta = \theta_0.
+$$
+which defines a **restricted parameter space**. We also need the *restricted MLE* before defining the test statistic. Let 
+
+
+$$
+\theta_{\text{rMLE}} = \arg\max_{\theta \in \Theta_R}\log L(\theta:\mathbf{x}).
+$$
+
+We have shown at the beginning of the section that 
+
+$$
+E\left[ \frac{\partial}{\partial \theta} \log L(\theta:\mathbf{x}) \right] = \mathbf{0},
+$$
+
+and
+
+$$
+\mathbb{I}_n(\theta) = -E\left[\left(\frac{\partial}{\partial\theta}\log L(\theta, \mathbf{x})\right)\left(\frac{\partial}{\partial\theta}\log L(\theta, \mathbf{x})\right)^T \right]
+$$
+
+We also showed that
+
+$$
+\text{var} \left[\frac{\partial}{\partial \theta} \log L(\theta:\mathbf{x})\right] = \mathbb{I}_n(\theta)
+$$
+
+and
+
+$$
+\frac{\partial}{\partial \theta} \log L(\theta:\mathbf{x}) \rightarrow_p \mathcal{N}_k\left[\mathbf{0}, \mathbb{I}_n(\theta)\right]
+$$
+
+where $k = \dim (\Theta) - \dim (\Theta_R)$ is the number of unknown parameters.
+
+\
+
+**Theorem**: with the above notations and some regularity conditions, the following asymptotic normality holds.
+
+$$
+S_n = \left[\frac{\partial}{\partial\theta}\log L(\theta_{\text{rMLE}}, \mathbf{x})\right]^T \mathbb{I}_n^{-1}(\theta_{\text{rMLE}})\left[\frac{\partial}{\partial\theta}\log L(\theta_{\text{rMLE}}, \mathbf{x})\right] \rightarrow_p \chi^2_k,
+$$
+
+where $\theta_{\text{rMLE}}$ is the restricted MLE under the null hypothesis.
+
+
+
+
+
+**Example (continued)**: The Weibull example revisited. We still consider 
+
+$$
+H_0: \ \ \beta = 1 \ \ \text{vs} \ \ H_a: \beta \ne 1.
+$$
+
+
+The **first step** is to find the restricted MLE in the restricted parameter space defined under $H_0$. Under $H_0: \ \ \beta = 1$, the Weibull distribution is reduced to the exponential distribution with density $f(x) = \alpha e^{-\alpha x}$. Therefore, the restricted MLE is $\theta_{\text{rMLE}} = (\hat{\alpha}, \beta=1) = (1/\bar{x},1)$.
+
+
+The **second step** is to define the score test statistic, we need to find the gradient vector and the Fisher information matrix based on the unrestricted parameter space. Note that the (full) log-likelihood function is
+
+$$
+l(\alpha, \beta) = n[\log(\alpha) + \log (\beta)] + (\beta -1)\sum_{i=1}^n\log (x_i)-\alpha\sum_{i=1}^n x_i^\beta
+$$
+
+The score functions are given by
+
+$$
+\begin{cases} 
+\frac{\partial l(\alpha, \beta)}{\partial \alpha} = \frac{n}{\alpha} - \sum_{i=1}^n x_i^\beta,    \\ 
+\frac{\partial l(\alpha, \beta)}{\partial \beta}= \frac{n}{\beta} + \sum_{i=1}^n \log(x_i) - \alpha \sum_{i=1}^n x_i^\beta \log(x_i).
+\end{cases} 
+$$
+
+Next, we implement the above steps with a numerical example with the same data used in the previous examples.
+
+**Example**: We fit the two parameter Weibull distribution with density $f(x) = \alpha\beta x^{\beta-1}e^{-\alpha x^\beta}$.
+
+```{r}
+x= c(0.2, 0.3, 0.5, 0.5, 0.5, 0.5, 0.6, 0.6, 0.7, 0.7, 0.7, 0.8, 0.8, 1.0, 1.0, 1.0, 1.0, 
+     1.1, 1.3, 1.5, 1.5, 1.5, 1.5, 2.0, 2.0, 2.2, 2.5, 3.0, 3.0, 3.3, 3.3, 4.0, 4.0, 4.5, 
+     4.7, 5.0, 5.4, 5.4, 7.0, 7.5, 8.8, 9.0, 10.3, 22.0, 24.5)
+n = length(x)
+##
+lb = n + sum(log(x)) - (1/mean(x))*sum(x*log(x))
+lb
+```
+
+The Score vector is
+
+$$
+U(\theta_{\text{rMLE}}) = \left[ 0, -11.12719 \right]
+$$
+and
+
+$$
+\frac{\partial^2}{\partial \alpha^2}\log L(\alpha:\mathbf{x}) = -\frac{n}{\alpha^2}, \ \ \text{and} \ \  \frac{\partial^2}{\partial \alpha \partial \beta}\log L(\alpha:\mathbf{x}) = -\sum_{i=1}^n x_i^\beta \log(x_i)
+$$
+
+$$
+\frac{\partial^2}{\partial \beta^2}\log L(\alpha:\mathbf{x}) = -\frac{n}{\beta^2} -\sum_{i=1}^n x_i^\beta \log(x_i)
+$$
+
+```{r}
+## Inverse observed Fisher Information matrix
+x= c(0.2, 0.3, 0.5, 0.5, 0.5, 0.5, 0.6, 0.6, 0.7, 0.7, 0.7, 0.8, 0.8, 1.0, 1.0, 1.0, 1.0, 
+     1.1, 1.3, 1.5, 1.5, 1.5, 1.5, 2.0, 2.0, 2.2, 2.5, 3.0, 3.0, 3.3, 3.3, 4.0, 4.0, 4.5, 
+     4.7, 5.0, 5.4, 5.4, 7.0, 7.5, 8.8, 9.0, 10.3, 22.0, 24.5)
+n = length(x)
+##
+laa = -n*mean(x)
+lab = -sum(x*log(x))
+lbb = -n-sum(x*log(x))
+IIn = matrix(c(laa, lab, lab, lbb), nrow=2)
+IIn.inv = solve(IIn)
+IIn.inv
+```
+
+The observed Fisher information matrix based on the restricted MLE is given by
+
+$$
+\mathbb{I}_n^{-1}(\theta_{\text{rMLE}}) = 
+    \begin{bmatrix}
+       0.009319889 & -0.008137795 \\
+       -0.008137795 & 0.004287062 
+    \end{bmatrix}      
+$$
+
+
+```{r}
+## Score test statistic
+Sn=c(0, -11.12719)%*% IIn.inv %*% c( 0, -11.12719)
+Sn
+```
+
+The score test statistic is
+
+$$
+S_n = [0, -11.12719]\begin{bmatrix}
+       0.009319889 & -0.008137795 \\
+       -0.008137795 & 0.004287062 
+    \end{bmatrix}
+    \begin{bmatrix}
+       0  \\
+       -11.12719
+    \end{bmatrix} \approx 0.5307998.
+$$
+
+Since $S_n \rightarrow_p \chi^2_1$. The p-value of the score test is given by
+
+$$
+\text{p-value} = P[\chi^2_1 > 0.5307998] = 0.4662708.
+$$
+
+The null hypothesis $H_0: \beta = 1$ is not rejected. This is consistent with the Wald $\chi^2$ test.
+
+
+\
+
+\
 
 
 ## Concluding Remarks
@@ -1660,10 +2092,7 @@ Many studies in theory and simulation have shown that the likelihood ratio appro
 
 The Score and Wald approaches depend on derivatives, and thus, can change substantially if we reparameterize the model. The likelihood ratio test is recommended in practice. 
 
-The likelihood ratio test requires restricted and unrestricted MLEs that defined based on the restricted and unrestricted parameter spaces. <font color = “red”>\color{red}This means that the LRT compares only two nested models or distributions.</font>
-
-
-
+The likelihood ratio test requires restricted and unrestricted MLEs that are defined based on the restricted and unrestricted parameter spaces. <font color = “red”>**\color{red}This means that the LRT compares only two nested models or distributions**.</font>
 
 
 
