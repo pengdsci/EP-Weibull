@@ -1794,7 +1794,7 @@ $$
 is defined to be 
 
 $$
-LRT=-2\ln \frac{L(\hat{\theta}_{rMLE}:\mathbf{x})}{L(\hat{\theta}_{MLE}:\mathbf{x})} \rightarrow_p\chi^2_{\text{df}.}
+LRT=-2\ln \frac{L(\hat{\theta}_{rMLE}:\mathbf{x})}{L(\hat{\theta}_{MLE}:\mathbf{x})} = -2\left[ \log L(\hat{\theta}_{rMLE}:\mathbf{x}) -\log L(\hat{\theta}_{MLE}:\mathbf{x})  \right] \rightarrow_p\chi^2_{\text{df}.}
 $$
 The p-value of the above likelihood ratio $\chi^2$ test is determined by
 
