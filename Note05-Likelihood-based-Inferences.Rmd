@@ -419,7 +419,7 @@ Using the formula $\text{Var}(X) = E(X^2) - [E(X)]^2$ for all random variable $X
 <font color="red">**\color{red}Property**:</font> Let $L(\theta)$ be the likelihood function defined based on the iid sample data $\{x_1, x_2, \cdots. x_n \} \sim f_\theta(x)$. Then  
 
 $$
-I_n(\theta) \stackrel{\text{def}}{=} E_{\mathbf{x}}\left[ \left(\frac{\partial}{\partial \theta} \log L( \theta: \mathbf{x}) \right)^2\right] - \left\{E_{\mathbf{x}}\left[ \frac{\partial}{\partial \theta}  \log L(\theta: \mathbf{x})\right] \right\}^2 = \text{Var}_{\mathbf{x}}\left[\log L(\theta: \mathbf{x})\right].
+I_n(\theta) \stackrel{\text{def}}{=} E_{\mathbf{x}}\left[ \left(\frac{\partial}{\partial \theta} \log L( \theta: \mathbf{x}) \right)^2\right] - \left\{E_{\mathbf{x}}\left[ \frac{\partial}{\partial \theta}  \log L(\theta: \mathbf{x})\right] \right\}^2 = \text{var}_{\mathbf{x}}\left[\frac{\partial \log L(\theta: \mathbf{x})}{\partial \theta}\right].
 $$
 
 \
