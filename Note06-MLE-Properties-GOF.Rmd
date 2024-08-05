@@ -2,6 +2,18 @@
 title: "6. Statistical Simulation and Goodness-of-fit"
 date: "8/10/2024"
 output:
+  pdf_document: 
+    toc: yes
+    toc_depth: 4
+    fig_caption: yes
+    number_sections: yes
+    fig_width: 3
+    fig_height: 3
+  word_document: 
+    toc: yes
+    toc_depth: 4
+    fig_caption: yes
+    keep_md: yes
   html_document: 
     toc: yes
     toc_depth: 4
@@ -12,18 +24,6 @@ output:
     code_download: yes
     smooth_scroll: yes
     theme: lumen
-  word_document: 
-    toc: yes
-    toc_depth: 4
-    fig_caption: yes
-    keep_md: yes
-  pdf_document: 
-    toc: yes
-    toc_depth: 4
-    fig_caption: yes
-    number_sections: yes
-    fig_width: 3
-    fig_height: 3
 editor_options: 
   chunk_output_type: inline
 ---
@@ -1183,6 +1183,166 @@ We should also report the power curves between two tests: **The power curve of t
 # Non-parametric Simulations
 
 Before this section, we simulate data from a population with a known distribution function. If we don't know the explicit distribution functions of the population, how can we simulate data from that population? This section discusses methods of simulating samples from finite populations.
+
+Assume that we take a random sample from a population with **unknown** cumulative distribution function $F(x)$. We cannot use the Monte Carlo simulation method to simulate random samples. We have introduced using empirical distribution function $F_n(x)$. That is, $F_n(x) \approx F(x)$. We can then take samples from $F_n(x)$.
+
+
+## Bootstrap Sampling
+
+Assume that $\{x_1, x_2, \cdots, x_n \} \sim F(x)$ and assume that $F_n(x)$ is the cumulative empirical distribution function (ECDF). Since the random sample $\{x_1, x_2, \cdots, x_n \}$ is a finite data set. There two basic sampling plans: **sampling with and without replacement**.
+
+**Sampling with Replacement**: selecting a sample from a given data set or population, the sample is returned to the data set or population, making it eligible for selection again. This technique can be mathematically represented as a sequence of independent and identically distributed (IID) random variables. Using this replacement sampling, the resulting random sample is called <font color = "red">**\color{red}Bootstrap sample**</font>.
+
+
+To illustrate, we consider the sampling distribution of sample mean based on a random sample $\{ x_1, x_2, \cdots, x_n\} \sim F(x)$ with $F(x)$ being unknown. Define the sample mean $\bar{x} = \left(\sum_{i=1}^n x_i\right)/n$. Using the central limit theorem (CLT), if the sample size is large,
+
+$$
+\bar{x} \sim N\left(\mu, \frac{\sigma^2}{n} \right)
+$$
+With the above sampling distribution, we can construct $95\%$ confidence interval
+
+$$
+\bar{x} \pm Z_{\alpha/2}\frac{\sigma}{\sqrt{n}}.
+$$
+
+
+If we don't know what sample size is considered to be large, how do we find the sampling distribution and confidence interval?
+
+Under some mild conditions, we can use bootstrap method to simulate the sampling distribution and confidence intervals - bootstrap sampling distribution and bootstrap confidence interval.
+
+
+* **Bootstrap Sampling** with the assumption that the sample yields a good approximation of the population distribution, we can take bootstrap samples from the **actual** sample. Let
+
+$$
+\{x_1, x_2, \cdots, x_n\} \to F(x:\theta)
+$$ 
+be the actual random sample taken from the population. A **bootstrap sample** is obtained by taking a sample **with replacement** from the original data set (not the population!) with the same size as the original sample. Because **with replacement** was used, some values in the bootstrap sample appear once, some twice, and so on, and some do not appear at all. 
+
+
+* **Notation of Bootstrap Sample**. We use $\{x_1^{(i*)}, x_2^{(i*)}, \cdots, x_n^{(i*)}\}$ to denote the $i^{th}$ bootstrap sample. Then the corresponding mean is called bootstrap sample mean and denoted by $\hat{\mu}_i^*$, for $i = 1, 2, ..., n$.
+
+
+*	**Bootstrap sampling distribution** of the sample mean can be estimated by taking a large number, say B, of bootstrap samples. The resulting B bootstrap sample means are used to estimate the sampling distribution. Note that, in practice, B is bigger than 1000.
+
+
+The above Bootstrap sampling process is illustrated in the following figure.
+
+```{r echo=FALSE, fig.align ="center", fig.cap="Steps for the Bootstrap sampling distribution of a point estimator of the population parameter", out.width="95%"}
+include_graphics("img/BootstrapWorkFlow.jpg")
+```
+
+
+* **Example**. Consider a hypothetical data set with with 81 observations. We want to use the Bootstrap method to estimate the sampling distribution of the sample means and construct $95\%$ bootstrap confidence interval for the population mean. 
+
+
+```{r}
+### read the delimited data from URL
+wcu.height = read.table("https://raw.githubusercontent.com/pengdsci/sta321/main/ww02/w02-wcuheights.txt", header = TRUE)
+# taking the original random sample from the population
+original.sample = sample( wcu.height$Height,    # population of all WCU students heights
+                       81,                      # sample size = 81 values in the sample
+                       replace = FALSE          # sample without replacement
+                 )                              
+### Bootstrap sampling begins 
+bt.sample.mean.vec = NULL      # define an empty vector to hold sample means of repeated samples.
+for(i in 1:1000){              # starting for-loop to take bootstrap samples with n = 81
+  ith.bt.sample = sample( original.sample,    # Original sample with 81 WCU students' heights
+                       81,                    # sample size = 81 MUST be equal to the sample size!!
+                       replace = TRUE         # MUST use WITH REPLACEMENT!!
+                 )                            # this is the i-th Bootstrap sample
+  bt.sample.mean.vec[i] = mean(ith.bt.sample) # calculate the mean of i-th bootstrap sample and 
+                                              # save it in the empty vector: sample.bt.mean.vec 
+  }
+```
+
+
+
+
+The following histogram shows the bootstrap sampling distribution of sample means with size $n=81$.
+
+
+```{r fig.align='center', fig.cap = "Bootstrap sampling distribution of sample means"}
+hist(bt.sample.mean.vec,                                         # data used for histogram
+     breaks = 14,                                                # specify number of vertical bars
+     xlab = "Bootstrap sample means",                            # change the label of x-axis
+     main="Bootstrap Sampling Distribution \n of Sample Means")   # add a title to the histogram
+```
+
+The $95\%$ confidence interval is given by
+
+```{r}
+CI = quantile(bt.sample.mean.vec, c(0.025, 0.975))
+CI
+```
+
+**Example 2**: Sampling distribution of correlation coefficient and its $95\%$ bootstrap confidence intervals. We use the well-known iris data set to illustrate the steps.
+
+**Bootstrapping Data Set** There are different ways to take bootstrap samples. **The key point is that we cannot sample individual variables in the data frame separately to avoid mismatching!** The method we introduce here is also called bootstrap sampling cases. Here are the basic steps:
+
+* Assume the data frame has $n$ rows. We define the vector of row $ID$. That is, $ID = \{1, 2, 3, ..., n\}$.
+
+* Take a bootstrap sample from $ID$ (i.e., sampling with replacement) with same size = n, denoted by $ID^*$. As commented earlier, there will be replicates of $ID^*$ and some values in $ID$ are not in $ID^*$.
+
+* Use $ID^*$ to select the corresponding rows to form a bootstrap sample and then perform bootstrap analysis.
+
+Here is an example of taking the bootstrap sample from the original sample with multiple variables. The data set we use here is well-known and is available at <https://raw.githubusercontent.com/pengdsci/sta321/main/ww02/w02-iris.txt>
+
+
+```{r}
+# read data into R from the URL
+iris = read.table("https://raw.githubusercontent.com/pengdsci/sta321/main/ww02/w02-iris.txt", header = TRUE)
+n = dim(iris)[1]        # returns the dimension of the data frame, 1st component is the number of rows            
+bt.ID = sample(1:n, replace = TRUE)   # bootstrap IDs, MUST use replacement method!
+sort(bt.ID)                 # check the content of bt.ID. I sort the bt.ID to see replicate easily
+```
+
+Next, we use the above bt.ID to take the bootstrap sample from the original data set **iris**.
+
+```{r results = FALSE}
+bt.iris = iris[bt.ID,]   # taking bootstrap cases (or rows, records) using the bt.ID
+bt.iris                  # display the bootstrap sample
+```
+
+## Confidence Interval of Coefficient Correlation
+
+In this section, we construct a 95% bootstrap percentile confidence interval for the coefficient correlation between the SepalLength and SepalWidth given in **iris**. Note that R built-in function **cor(x,y)** can be used to calculate the bootstrap correlation coefficient directly. The R code for constructing a bootstrap confidence interval for the coefficient correlation is given below.
+
+```{r}
+iris = read.table("https://raw.githubusercontent.com/pengdsci/sta321/main/ww02/w02-iris.txt", header = TRUE)
+n = dim(iris)[1]        # returns the dimension of the data frame, 1st component is the number of rows            
+##
+bt.cor.vec = NULL    # empty vector bootstrap correlation coefficients
+for (i in 1:5000){   # this time I take 5000 bootstrap samples for this example.
+  bt.ID.i = sample(1:n, replace = TRUE)  # bootstrap IDs, MUST use replacement method!
+  bt.iris.i = iris[bt.ID.i, ]            # i-th bootstrap ID
+  bt.cor.vec[i] = cor(bt.iris.i$SepalLength, bt.iris.i$SepalWidth)   # i-th bootstrap correlation coefficient
+}
+bt.CI = quantile(bt.cor.vec, c(0.025, 0.975) )
+bt.CI
+```
+
+**Interpretation:** We are 95% confident that there is no statistically significant correlation between sepal length and sepal width based on the given sample. This may be because the data set contains three different types of iris. 
+
+Next, we make two plots to visualize the relationship between the two variables.
+
+```{r fig.align='center', fig.height=3, fig.width=6, fig.cap="Left panel: histogram of the bootstrap coefficient of correlation. Right panel: the scatter plot of the sepal length and width."}
+par(mfrow=c(1,2))   # layout a plot sheet: 1 row and 2 columns
+## histogram
+hist(bt.cor.vec, breaks = 14, 
+       main="Bootstrap Sampling \n  Distribution of Correlation",
+      xlab = "Bootstrap Correlation Coefficient")
+## scatter plot
+plot(iris$SepalLength, iris$SepalWidth,
+     main = "Sepal Length vs Width",
+     xlab = "Sepal Length",
+     ylab = "Sepal Width")
+```
+
+
+
+
+
+
 
 
 
