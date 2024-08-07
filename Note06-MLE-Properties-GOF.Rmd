@@ -36,6 +36,7 @@ editor_options:
 
 h1.title {  /* Title - font specifications of the report title */
   font-size: 24px;
+  font-weight:bold;
   color: DarkRed;
   text-align: center;
   font-family: "Gill Sans", sans-serif;
@@ -53,20 +54,23 @@ h4.date { /* Header 4 - font specifications for the date  */
   text-align: center;
 }
 h1 { /* Header 1 - font specifications for level 1 section title  */
-    font-size: 22px;
+    font-size: 20px;
     font-family: system-ui;
+    font-weight:bold;
     color: navy;
     text-align: left;
 }
 h2 { /* Header 2 - font specifications for level 2 section title */
-    font-size: 20px;
+    font-size: 18px;
+    font-weight:bold;
     font-family: "Times New Roman", Times, serif;
     color: navy;
     text-align: left;
 }
 
 h3 { /* Header 3 - font specifications of level 3 section title  */
-    font-size: 18px;
+    font-size: 16px;
+    font-weight:bold;
     font-family: "Times New Roman", Times, serif;
     color: navy;
     text-align: left;
@@ -1191,6 +1195,10 @@ Assume that we take a random sample from a population with **unknown** cumulativ
 
 Assume that $\{x_1, x_2, \cdots, x_n \} \sim F(x)$ and assume that $F_n(x)$ is the cumulative empirical distribution function (ECDF). Since the random sample $\{x_1, x_2, \cdots, x_n \}$ is a finite data set. There two basic sampling plans: **sampling with and without replacement**.
 
+```{r echo=FALSE, fig.align ="center", fig.cap="ECDF vs CDF", out.width="95%"}
+include_graphics("img/w05-HowBootstrapWorks.png")
+```
+
 **Sampling with Replacement**: selecting a sample from a given data set or population, the sample is returned to the data set or population, making it eligible for selection again. This technique can be mathematically represented as a sequence of independent and identically distributed (IID) random variables. Using this replacement sampling, the resulting random sample is called <font color = "red">**\color{red}Bootstrap sample**</font>.
 
 
@@ -1231,13 +1239,20 @@ The above Bootstrap sampling process is illustrated in the following figure.
 include_graphics("img/BootstrapWorkFlow.jpg")
 ```
 
+The relationship between Bootstrap and Monte Carlo simulations are described in the following figure.
+
+```{r echo=FALSE, fig.align ="center", fig.cap="Bootstrap simulation vs Monte Carlo simulation.", out.width="95%"}
+include_graphics("img/w05-Bootstrap-Monte-Carlo.png")
+```
+
 
 * **Example**. Consider a hypothetical data set with with 81 observations. We want to use the Bootstrap method to estimate the sampling distribution of the sample means and construct $95\%$ bootstrap confidence interval for the population mean. 
 
 
 ```{r}
 ### read the delimited data from URL
-wcu.height = read.table("https://raw.githubusercontent.com/pengdsci/sta321/main/ww02/w02-wcuheights.txt", header = TRUE)
+wcu.height = read.table("https://raw.githubusercontent.com/pengdsci/sta321/main/ww02/w02-wcuheights.txt", 
+                        header = TRUE)
 # taking the original random sample from the population
 original.sample = sample( wcu.height$Height,    # population of all WCU students heights
                        81,                      # sample size = 81 values in the sample
@@ -1290,8 +1305,9 @@ Here is an example of taking the bootstrap sample from the original sample with 
 
 ```{r}
 # read data into R from the URL
-iris = read.table("https://raw.githubusercontent.com/pengdsci/sta321/main/ww02/w02-iris.txt", header = TRUE)
-n = dim(iris)[1]        # returns the dimension of the data frame, 1st component is the number of rows            
+iris = read.table("https://raw.githubusercontent.com/pengdsci/sta321/main/ww02/w02-iris.txt", 
+                  header = TRUE)
+n = dim(iris)[1]    # returns the dimension of the data frame, 1st component is the number of rows            
 bt.ID = sample(1:n, replace = TRUE)   # bootstrap IDs, MUST use replacement method!
 sort(bt.ID)                 # check the content of bt.ID. I sort the bt.ID to see replicate easily
 ```
@@ -1308,14 +1324,17 @@ bt.iris                  # display the bootstrap sample
 In this section, we construct a 95% bootstrap percentile confidence interval for the coefficient correlation between the SepalLength and SepalWidth given in **iris**. Note that R built-in function **cor(x,y)** can be used to calculate the bootstrap correlation coefficient directly. The R code for constructing a bootstrap confidence interval for the coefficient correlation is given below.
 
 ```{r}
-iris = read.table("https://raw.githubusercontent.com/pengdsci/sta321/main/ww02/w02-iris.txt", header = TRUE)
-n = dim(iris)[1]        # returns the dimension of the data frame, 1st component is the number of rows            
+iris = read.table("https://raw.githubusercontent.com/pengdsci/sta321/main/ww02/w02-iris.txt", 
+                  header = TRUE)
+n = dim(iris)[1]        # returns the dimension of the data frame, 1st component 
+                        # is the number of rows            
 ##
 bt.cor.vec = NULL    # empty vector bootstrap correlation coefficients
 for (i in 1:5000){   # this time I take 5000 bootstrap samples for this example.
   bt.ID.i = sample(1:n, replace = TRUE)  # bootstrap IDs, MUST use replacement method!
   bt.iris.i = iris[bt.ID.i, ]            # i-th bootstrap ID
-  bt.cor.vec[i] = cor(bt.iris.i$SepalLength, bt.iris.i$SepalWidth)   # i-th bootstrap correlation coefficient
+  # i-th bootstrap correlation coefficient
+  bt.cor.vec[i] = cor(bt.iris.i$SepalLength, bt.iris.i$SepalWidth)   
 }
 bt.CI = quantile(bt.cor.vec, c(0.025, 0.975) )
 bt.CI
